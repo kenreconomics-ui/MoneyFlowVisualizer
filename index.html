@@ -607,26 +607,22 @@
         <div class="modal">
             <h2>貨幣フローシミュレーター</h2>
             <p>
-                <strong>スマホ最適化版</strong><br>
-                お金がどこから生まれ、どう消えるか（信用創造）を体験できます。<br><br>
-                <strong>中央：</strong> 銀行システム（お金の創造主）<br>
-                <strong>上：</strong> 政府部門<br>
-                <strong>下：</strong> 民間部門<br><br>
-                下のボタンを操作して、経済の変化を観察しましょう。
+                お金がどこから生まれ、どう消えるか（信用創造）を体験できるシミュレーターです。<br><br>
+                <strong>🏦 中央：</strong> 銀行システム（中央銀行＋民間銀行）<br><br>
+                借入や返済によって、マネーがどのように増減するか観察しましょう。<br>
+                <strong>「🇯🇵 現状」</strong>ボタンを押すと、現在の日本のバランスシート状況が再現されます。
             </p>
             <button class="modal-btn" onclick="document.getElementById('intro-overlay').classList.remove('visible')">シミュレーション開始</button>
         </div>
     </div>
 
     <script>
-        // --- 画面サイズ調整ロジック (重要) ---
+        // --- 画面サイズ調整ロジック ---
         function adjustAppHeight() {
-            // ブラウザの実際の表示領域の高さを取得し、CSS変数にセット
             const vh = window.innerHeight;
             document.documentElement.style.setProperty('--app-height', `${vh}px`);
         }
 
-        // 初期化時とリサイズ時に実行
         window.addEventListener('resize', adjustAppHeight);
         adjustAppHeight();
 
@@ -745,7 +741,6 @@
         }
 
         function createParticle(startEl, endEl, color) {
-            // 簡易的なパーティクル（SVGの座標計算がFlexboxでずれる可能性があるため、より堅牢な実装に変更も可能だが、現状維持）
             const svgRect = els.svg.getBoundingClientRect();
             const startRect = startEl.getBoundingClientRect();
             const endRect = endEl.getBoundingClientRect();
@@ -757,7 +752,7 @@
 
             const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
             const cx = (x1 + x2) / 2;
-            const cy = (y1 + y2) / 2; // カーブを少し緩やかに
+            const cy = (y1 + y2) / 2;
             const d = `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
             
             path.setAttribute("d", d);
@@ -805,9 +800,14 @@
                 if (STATE[sector].liability >= AMOUNT_STEP && currentMoney >= AMOUNT_STEP) {
                     STATE[sector].asset -= AMOUNT_STEP;
                     STATE[sector].liability -= AMOUNT_STEP;
+                    
                     const barAsset = sector === 'govt' ? els.govtABar : els.privABar;
                     const barLiab = sector === 'govt' ? els.govtLBar : els.privLBar;
-                    createParticle(barAsset, els.bankNode, 'var(--text-sub)');
+
+                    // 修正: 資産と負債の両方から銀行へパーティクルを飛ばす
+                    createParticle(barAsset, els.bankNode, 'var(--asset-color)'); // 資産は緑
+                    createParticle(barLiab, els.bankNode, 'var(--liability-color)'); // 負債は赤
+                    
                     showPopup(barAsset, -AMOUNT_STEP, 'asset');
                     showPopup(barLiab, -AMOUNT_STEP, 'liability');
                     updateUI();
