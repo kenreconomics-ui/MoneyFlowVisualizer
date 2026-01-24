@@ -45,6 +45,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            transition: background-color 0.5s;
         }
 
         /* --- Header --- */
@@ -83,7 +84,7 @@
 
         .total-stats {
             display: flex;
-            gap: 15px;
+            gap: 10px;
             font-size: 0.8rem;
             font-weight: 600;
             align-items: center;
@@ -94,6 +95,7 @@
             flex-direction: column;
             align-items: flex-end;
             line-height: 1.1;
+            transition: opacity 0.5s;
         }
         
         .stat-label {
@@ -148,6 +150,7 @@
             /* 重要: 縦方向に伸縮してスペースを埋める */
             flex: 1; 
             min-height: 0; /* Flexboxの子要素が縮めるようにする魔法 */
+            transition: all 0.5s ease;
         }
 
         .sector-govt {
@@ -168,6 +171,7 @@
             padding-bottom: 8px;
             border-bottom: 1px solid rgba(0,0,0,0.05);
             flex-shrink: 0; /* ヘッダーは縮まない */
+            transition: opacity 0.5s;
         }
 
         .icon-box {
@@ -202,6 +206,7 @@
             background: rgba(0,0,0,0.02);
             border-radius: 8px;
             overflow: hidden;
+            transition: opacity 0.5s;
         }
 
         .chart-container {
@@ -217,7 +222,7 @@
 
         .bs-bar {
             width: 100%;
-            transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s, transform 0.5s;
             border-radius: 6px 6px 0 0;
             display: flex;
             align-items: center;
@@ -249,6 +254,7 @@
             font-weight: 600;
             flex-shrink: 0; 
             background: rgba(255,255,255,0.5);
+            transition: all 0.5s;
         }
 
         .bar-asset { background: var(--asset-color); }
@@ -266,6 +272,7 @@
             flex-shrink: 0;
             margin: -5px 0; /* カードとの隙間を詰める */
             z-index: 10;
+            transition: opacity 0.5s;
         }
 
         .bank-node {
@@ -302,6 +309,7 @@
             z-index: 50;
             overflow-x: auto; /* 横スクロール許可 */
             border-top: 1px solid #eee;
+            transition: opacity 0.5s;
         }
 
         .control-group {
@@ -353,6 +361,86 @@
         .btn-redeem { background: #06b6d4; }
         .btn-reset { background: var(--text-sub); padding: 4px 8px; width: auto; font-size: 0.7rem;}
         .btn-japan { background: #059669; color: white; padding: 4px 8px; font-size: 0.7rem;}
+        .btn-debt { background: #ef4444; color: white; padding: 4px 8px; font-size: 0.7rem; }
+
+        /* --- Debt Focus Mode (国の借金ボタン用) --- */
+        body.debt-focus-mode {
+            background-color: #222; /* 背景を暗くして不気味に */
+        }
+
+        /* 修正: コンテナのはみ出し禁止を解除し、z-indexを上げてボタンより手前にする */
+        body.debt-focus-mode .canvas-container {
+            overflow: visible !important;
+            z-index: 3000;
+        }
+
+        /* 消す要素たち（半透明にして目立たなくする） */
+        body.debt-focus-mode .sector-private,
+        body.debt-focus-mode .center-column,
+        body.debt-focus-mode #govt-asset-bar,
+        body.debt-focus-mode #label-govt-asset,
+        body.debt-focus-mode .sector-header,
+        body.debt-focus-mode .control-deck,
+        body.debt-focus-mode .stat-item:not(.stat-debt-only) {
+            opacity: 0.05;
+            filter: blur(2px);
+            pointer-events: none;
+        }
+
+        /* 政府のカード自体は枠線を消して背景になじませるが、z-indexは最強にする */
+        body.debt-focus-mode #card-govt {
+            background: transparent;
+            box-shadow: none;
+            border-color: transparent;
+            z-index: 3001 !important; /* ボタン(z-index:50)より確実に前に */
+            position: relative;
+        }
+        
+        /* グラフを囲む要素のはみ出し禁止を解除し、文字が見えるようにする */
+        body.debt-focus-mode #card-govt .bs-container,
+        body.debt-focus-mode #card-govt .bs-column,
+        body.debt-focus-mode #card-govt .chart-container,
+        body.debt-focus-mode #govt-liability-bar {
+            overflow: visible !important;
+        }
+
+        body.debt-focus-mode .sector-govt {
+            background: transparent;
+            border-top-color: transparent;
+        }
+        body.debt-focus-mode .bs-column {
+            background: transparent;
+        }
+
+        /* 唯一残す「国の借金（負債バー）」を強調 */
+        body.debt-focus-mode #govt-liability-bar {
+            opacity: 1 !important;
+            /* 修正: バー自体は少し強調する程度にとどめる */
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(239, 68, 68, 0.9);
+            z-index: 3002; /* カードよりさらに前 */
+        }
+        
+        body.debt-focus-mode #label-govt-liability {
+            opacity: 1 !important;
+            font-size: 1.8rem; /* さらに大きく */
+            color: #ef4444;
+            font-weight: 900;
+            background: transparent;
+            text-shadow: 0 0 10px rgba(0,0,0,1);
+            /* 修正: 文字がグラフに被らないよう、ガッツリ下に下げる */
+            transform: translateY(60px) scale(1.3);
+            z-index: 3003; /* 何よりも前 */
+            position: relative;
+            white-space: nowrap; /* 折り返し防止 */
+        }
+
+        /* ヘッダーのボタンを目立たせる */
+        body.debt-focus-mode .btn-debt {
+            box-shadow: 0 0 15px #ef4444;
+            transform: scale(1.1);
+        }
+
 
         /* --- Animations --- */
         @keyframes bank-pulse {
@@ -436,7 +524,7 @@
             }
             
             .group-label { font-size: 0.75rem; }
-            .btn-reset, .btn-japan { padding: 6px 12px; font-size: 0.8rem; }
+            .btn-reset, .btn-japan, .btn-debt { padding: 6px 12px; font-size: 0.8rem; }
             
             .stat-label { font-size: 0.7rem; }
             .total-stats { font-size: 0.9rem; }
@@ -481,7 +569,7 @@
                 <span>💴 Economy Flow</span>
             </div>
             <div class="total-stats">
-                <div class="stat-item">
+                <div class="stat-item stat-debt-only">
                     <span class="stat-label">政府純資産</span>
                     <span id="govt-net-display" style="color: var(--liability-color)">0兆円</span>
                 </div>
@@ -495,6 +583,7 @@
                     <span id="total-economy-display">0兆円</span>
                 </div>
                 <button class="btn-japan" id="btn-japan">🇯🇵 現状</button>
+                <button class="btn-debt" id="btn-debt-focus">😱 国の借金</button>
                 <button class="btn-reset" id="reset-btn">リセット</button>
             </div>
         </div>
@@ -518,7 +607,7 @@
                                 <span class="bs-bar-content" id="govt-asset-val">0</span>
                             </div>
                         </div>
-                        <div class="bs-label">資産<br>(政府預金)</div>
+                        <div class="bs-label" id="label-govt-asset">資産<br>(政府預金)</div>
                     </div>
                     <div class="bs-column">
                         <div class="chart-container">
@@ -526,7 +615,7 @@
                                 <span class="bs-bar-content" id="govt-liability-val">0</span>
                             </div>
                         </div>
-                        <div class="bs-label">負債<br>(国債)</div>
+                        <div class="bs-label" id="label-govt-liability">負債<br>(国債)</div>
                     </div>
                 </div>
             </div>
@@ -886,6 +975,7 @@
         document.getElementById('btn-bond-sell').onclick = () => actions.bondSell();
         
         document.getElementById('reset-btn').onclick = () => {
+            document.body.classList.remove('debt-focus-mode');
             STATE.govt = { asset: 0, liability: 0 };
             STATE.private = { asset: 0, liability: 0, bonds: 0 };
             els.bankNode.style.transform = "scale(1.2)";
@@ -894,9 +984,14 @@
         };
 
         document.getElementById('btn-japan').onclick = () => {
+             document.body.classList.remove('debt-focus-mode');
              STATE.govt = { asset: 0, liability: 1200 };
              STATE.private = { asset: 1800, liability: 600, bonds: 400 };
              updateUI();
+        };
+
+        document.getElementById('btn-debt-focus').onclick = () => {
+            document.body.classList.toggle('debt-focus-mode');
         };
         
         els.bankNode.onclick = document.getElementById('reset-btn').onclick;
