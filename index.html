@@ -24,7 +24,6 @@
             --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
             --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
             
-            /* JSで動的に設定される高さ */
             --app-height: 100vh;
         }
 
@@ -39,7 +38,6 @@
             font-family: 'Inter', 'Noto Sans JP', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
-            /* 画面全体の高さを固定し、スクロールさせない */
             height: var(--app-height);
             width: 100vw;
             display: flex;
@@ -58,7 +56,7 @@
             align-items: center;
             box-shadow: var(--shadow-sm);
             z-index: 50;
-            flex-shrink: 0; /* ヘッダーは縮まない */
+            flex-shrink: 0;
         }
 
         .header-content {
@@ -104,9 +102,9 @@
             text-transform: uppercase;
         }
 
-        /* --- Main Canvas Area --- */
+        /* --- Canvas Area --- */
         .canvas-container {
-            flex: 1; /* 残りの高さをすべて使う */
+            flex: 1;
             position: relative;
             display: flex;
             flex-direction: column;
@@ -114,7 +112,6 @@
             align-items: stretch;
             overflow: hidden;
             padding: 10px;
-            /* 背景のライン用SVGコンテナ */
         }
 
         svg {
@@ -127,10 +124,9 @@
             z-index: 1;
         }
 
-        /* スマホ・PC共通のFlexboxベースレイアウト */
         .economy-grid {
             display: flex;
-            flex-direction: column; /* デフォルトは縦並び（スマホ優先） */
+            flex-direction: column;
             width: 100%;
             height: 100%;
             position: relative;
@@ -147,11 +143,11 @@
             display: flex;
             flex-direction: column;
             border: 1px solid rgba(0,0,0,0.05);
-            /* 重要: 縦方向に伸縮してスペースを埋める */
             flex: 1; 
-            min-height: 0; /* Flexboxの子要素が縮めるようにする魔法 */
+            min-height: 0;
             transition: all 0.5s ease;
-            position: relative; /* ポップアップの基準点 */
+            position: relative;
+            overflow: visible; 
         }
 
         .sector-govt {
@@ -171,9 +167,9 @@
             margin-bottom: 8px;
             padding-bottom: 8px;
             border-bottom: 1px solid rgba(0,0,0,0.05);
-            flex-shrink: 0; /* ヘッダーは縮まない */
+            flex-shrink: 0;
             transition: opacity 0.5s;
-            flex-wrap: wrap; /* スマホで文字が長くなった時に折り返せるように */
+            flex-wrap: wrap;
         }
 
         .icon-box {
@@ -188,60 +184,89 @@
             flex-shrink: 0;
         }
 
-        .sector-title { font-weight: 700; font-size: 0.9rem; }
-        .sector-subtitle { font-size: 0.7rem; color: var(--text-sub); }
-
-        /* 民間部門のタイトルインタラクション */
-        #private-sector-title {
-            cursor: pointer;
+        .sector-title { 
+            font-weight: 700; 
+            font-size: 0.9rem;
             display: flex;
             align-items: center;
-            flex-wrap: wrap; /* スマホ用 */
+            flex-wrap: wrap;
         }
         
-        #private-sector-title:hover {
-            text-decoration: underline;
-            text-decoration-style: dotted;
-            text-underline-offset: 4px;
+        .sector-subtitle { font-size: 0.7rem; color: var(--text-sub); }
+
+        #private-sector-title {
+            cursor: pointer;
+            user-select: none;
+            padding: 4px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        #private-sector-title:active {
+            background: rgba(0,0,0,0.05);
         }
 
-        /* 隠しテキスト（世代情報）のアニメーション */
         .generation-info {
             display: inline-block;
             font-size: 0.75rem;
-            color: #b45309; /* Dark orange */
+            color: #b45309;
             background: #fffbeb;
             border: 2px solid #f59e0b;
             border-radius: 20px;
-            white-space: nowrap;
-            
-            /* 初期状態: 非表示 */
             max-width: 0;
             padding: 0;
             margin-left: 0;
             opacity: 0;
             overflow: hidden;
+            white-space: nowrap;
             transform: scale(0.9);
             transform-origin: left center;
-            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); /* バウンドするような動き */
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            vertical-align: middle;
         }
 
         .generation-info.visible {
-            max-width: 300px; /* 十分な幅 */
-            padding: 4px 10px;
-            margin-left: 8px;
+            max-width: 300px;
+            padding: 2px 8px;
+            margin-left: 6px;
             opacity: 1;
             transform: scale(1);
-            box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.3);
+        }
+
+        /* --- Action Name Popup --- */
+        .action-name-popup {
+            position: absolute;
+            top: 20%; 
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.2rem;
+            font-weight: 900;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0;
+            animation: action-popup-anim 1.2s ease-out forwards;
+            text-shadow: 0 4px 10px rgba(255,255,255,1), 0 0 5px rgba(255,255,255,0.8);
+            white-space: nowrap;
+            background: rgba(255,255,255,0.4);
+            padding: 5px 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(2px);
+        }
+
+        @keyframes action-popup-anim {
+            0% { opacity: 0; transform: translate(-50%, 0) scale(0.5); }
+            15% { opacity: 1; transform: translate(-50%, -20px) scale(1.2); }
+            30% { transform: translate(-50%, -20px) scale(1); }
+            80% { opacity: 1; transform: translate(-50%, -20px); }
+            100% { opacity: 0; transform: translate(-50%, -50px); }
         }
 
         /* --- Bars & Charts --- */
         .bs-container {
             display: flex;
-            flex: 1; /* カード内でグラフエリアを最大化 */
+            flex: 1;
             gap: 10px;
             align-items: stretch; 
-            min-height: 0; /* 重要 */
+            min-height: 0;
         }
 
         .bs-column {
@@ -257,14 +282,14 @@
         }
 
         .chart-container {
-            flex: 1; /* 縦に伸びる */
+            flex: 1;
             width: 100%;
             display: flex;
             flex-direction: column-reverse; 
             align-items: center;
             justify-content: flex-start;
             position: relative;
-            min-height: 0; /* 重要 */
+            min-height: 0;
         }
 
         .bs-bar {
@@ -314,12 +339,31 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            /* 銀行エリアは固定高さにするか、小さくする */
             height: 50px; 
             flex-shrink: 0;
-            margin: -5px 0; /* カードとの隙間を詰める */
-            z-index: 10;
+            margin: -5px 0;
+            /* 修正: z-indexを上げて、メッセージが他のカードの下に潜らないようにする */
+            z-index: 500; 
             transition: opacity 0.5s;
+            overflow: visible; /* ポップアップ用にはみ出し許可 */
+        }
+
+        .bank-node {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 0 4px rgba(100, 116, 139, 0.1), var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            /* 修正: 親(center-column)が高いのでここは相対的に管理 */
+            z-index: 10; 
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid var(--bank-color);
+            position: relative; /* メッセージの基準点 */
         }
 
         .bank-node {
@@ -342,7 +386,7 @@
         .bank-node:hover { transform: scale(1.05); }
         .bank-node:active { transform: scale(0.95); }
         .bank-icon { font-size: 1.2rem; }
-        .bank-label { display: none; } /* スマホではラベル非表示 */
+        .bank-label { display: none; }
 
         /* --- Controls --- */
         .control-deck {
@@ -352,9 +396,9 @@
             display: flex;
             gap: 10px;
             justify-content: center;
-            flex-shrink: 0; /* コントロールは縮まない */
+            flex-shrink: 0;
             z-index: 50;
-            overflow-x: auto; /* 横スクロール許可 */
+            overflow-x: auto;
             border-top: 1px solid #eee;
             transition: opacity 0.5s;
         }
@@ -411,43 +455,46 @@
         .btn-debt { background: #ef4444; color: white; padding: 4px 8px; font-size: 0.7rem; }
         .btn-money { background: #10b981; color: white; padding: 4px 8px; font-size: 0.7rem; }
 
-        /* --- Action Name Popup --- */
-        .action-name-popup {
+        /* --- Status Message Popup (修正版) --- */
+        .status-message-popup {
             position: absolute;
-            top: 50px; /* カードの上部、ヘッダーの下あたり */
+            /* 銀行ノード(50px)の上側に配置。サイズが大きいのでかなり上に */
+            top: -100px; 
             left: 50%;
             transform: translateX(-50%);
-            font-size: 2.5rem; /* フォントサイズを一回り大きく調整 */
+            /* サイズを大幅アップ (0.85rem -> 1.6rem) */
+            font-size: 1.6rem;
             font-weight: 900;
-            color: var(--text-main);
+            color: #059669;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 12px 24px;
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25); 
             pointer-events: none;
-            z-index: 200;
-            opacity: 0;
-            animation: action-popup-anim 1.5s ease-out forwards;
-            text-shadow: 0 2px 10px rgba(255,255,255,0.9);
+            z-index: 10000 !important; /* 最前面 */
             white-space: nowrap;
+            opacity: 0;
+            border: 4px solid #059669;
+            /* アニメーション設定 */
+            animation: status-popup-appear 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            transition: opacity 0.5s ease; /* 消えるとき用 */
         }
 
-        @keyframes action-popup-anim {
-            0% { opacity: 0; transform: translate(-50%, 15px) scale(0.8); }
-            10% { opacity: 1; transform: translate(-50%, 0) scale(1.1); }
-            20% { transform: translate(-50%, 0) scale(1); }
-            80% { opacity: 1; transform: translate(-50%, 0); }
-            100% { opacity: 0; transform: translate(-50%, -20px); }
+        @keyframes status-popup-appear {
+            0% { opacity: 0; transform: translate(-50%, 40px) scale(0.5); }
+            100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
         }
 
-        /* --- Debt Focus Mode (国の借金ボタン用) --- */
+        /* --- Debt Focus Mode --- */
         body.debt-focus-mode {
-            background-color: #222; /* 背景を暗くして不気味に */
+            background-color: #222;
         }
 
-        /* 修正: コンテナのはみ出し禁止を解除し、z-indexを上げてボタンより手前にする */
         body.debt-focus-mode .canvas-container {
             overflow: visible !important;
             z-index: 3000;
         }
 
-        /* 消す要素たち（半透明にして目立たなくする） */
         body.debt-focus-mode .sector-private,
         body.debt-focus-mode .center-column,
         body.debt-focus-mode #govt-asset-bar,
@@ -460,16 +507,14 @@
             pointer-events: none;
         }
 
-        /* 政府のカード自体は枠線を消して背景になじませるが、z-indexは最強にする */
         body.debt-focus-mode #card-govt {
             background: transparent;
             box-shadow: none;
             border-color: transparent;
-            z-index: 3001 !important; /* ボタン(z-index:50)より確実に前に */
+            z-index: 3001 !important;
             position: relative;
         }
         
-        /* グラフを囲む要素のはみ出し禁止を解除し、文字が見えるようにする */
         body.debt-focus-mode #card-govt .bs-container,
         body.debt-focus-mode #card-govt .bs-column,
         body.debt-focus-mode #card-govt .chart-container,
@@ -485,50 +530,44 @@
             background: transparent;
         }
 
-        /* 唯一残す「国の借金（負債バー）」を強調 */
         body.debt-focus-mode #govt-liability-bar {
             opacity: 1 !important;
-            /* 修正: バー自体は少し強調する程度にとどめる */
             transform: scale(1.05);
             box-shadow: 0 0 40px rgba(239, 68, 68, 0.9);
-            z-index: 3002; /* カードよりさらに前 */
+            z-index: 3002;
         }
         
         body.debt-focus-mode #label-govt-liability {
             opacity: 1 !important;
-            font-size: 1.8rem; /* さらに大きく */
+            font-size: 1.8rem;
             color: #ef4444;
             font-weight: 900;
             background: transparent;
             text-shadow: 0 0 10px rgba(0,0,0,1);
-            /* 修正: 文字がグラフに被らないよう、ガッツリ下に下げる */
             transform: translateY(60px) scale(1.3);
-            z-index: 3003; /* 何よりも前 */
+            z-index: 3003;
             position: relative;
-            white-space: nowrap; /* 折り返し防止 */
+            white-space: nowrap;
         }
 
-        /* ヘッダーのボタンを目立たせる */
         body.debt-focus-mode .btn-debt {
             box-shadow: 0 0 15px #ef4444;
             transform: scale(1.1);
         }
 
-        /* --- Money Focus Mode (民間の貨幣ボタン用) --- */
+        /* --- Money Focus Mode --- */
         body.money-focus-mode {
             background-color: #222;
         }
 
-        /* コンテナのはみ出し禁止解除 */
         body.money-focus-mode .canvas-container {
             overflow: visible !important;
             z-index: 3000;
         }
 
-        /* 消す要素たち */
         body.money-focus-mode .sector-govt,
         body.money-focus-mode .center-column,
-        body.money-focus-mode #private-bond-bar, /* 国債バーも消す */
+        body.money-focus-mode #private-bond-bar,
         body.money-focus-mode #private-liability-bar,
         body.money-focus-mode #label-private-liability,
         body.money-focus-mode .sector-header,
@@ -539,7 +578,6 @@
             pointer-events: none;
         }
 
-        /* 民間のカード */
         body.money-focus-mode #card-private {
             background: transparent;
             box-shadow: none;
@@ -548,7 +586,6 @@
             position: relative;
         }
 
-        /* はみ出し許可 */
         body.money-focus-mode #card-private .bs-container,
         body.money-focus-mode #card-private .bs-column,
         body.money-focus-mode #card-private .chart-container,
@@ -564,22 +601,20 @@
             background: transparent;
         }
 
-        /* 唯一残す「貨幣」を強調 */
         body.money-focus-mode #private-asset-bar {
             opacity: 1 !important;
             transform: scale(1.05);
-            box-shadow: 0 0 40px rgba(16, 185, 129, 0.9); /* 緑色の光 */
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.9);
             z-index: 3002;
         }
 
         body.money-focus-mode #label-private-asset {
             opacity: 1 !important;
             font-size: 1.8rem;
-            color: #10b981; /* 緑色 */
+            color: #10b981;
             font-weight: 900;
             background: transparent;
             text-shadow: 0 0 10px rgba(0,0,0,1);
-            /* 下に移動して強調 */
             transform: translateY(60px) scale(1.3);
             z-index: 3003;
             position: relative;
@@ -727,7 +762,6 @@
                     <span class="stat-label">民間純資産</span>
                     <span id="private-net-display" style="color: var(--asset-color)">0兆円</span>
                 </div>
-                <!-- 経済規模はスマホでは省略気味にしてスペース確保 -->
                 <div class="stat-item" style="display: none;">
                     <span class="stat-label">経済規模</span>
                     <span id="total-economy-display">0兆円</span>
@@ -742,7 +776,6 @@
 
     <div class="canvas-container">
         <svg id="flow-lines">
-            <!-- JSで動的に線を描画 -->
         </svg>
 
         <div class="economy-grid">
@@ -782,7 +815,7 @@
             <div class="sector-card sector-private" id="card-private">
                 <div class="sector-header">
                     <div class="icon-box" style="background: var(--private-color);">🏢</div>
-                    <!-- 変更箇所：ここにクリックイベントと隠し要素を追加 -->
+                    <!-- クリックイベントと隠し要素 -->
                     <div class="sector-title" id="private-sector-title">民間部門<span class="generation-info" id="private-generation-info">将来世代＋現役世代＋高齢世代</span></div>
                 </div>
                 <div class="bs-container">
@@ -988,7 +1021,32 @@
             el.textContent = text;
             if (color) el.style.color = color;
             card.appendChild(el);
-            setTimeout(() => el.remove(), 1500);
+            setTimeout(() => el.remove(), 1200);
+        }
+
+        // ステータスメッセージ表示用（現状ボタンなどで使用）
+        function showStatusMessage(text) {
+            clearStatusMessage();
+            const container = document.getElementById('bank-node');
+            const el = document.createElement('div');
+            el.className = 'status-message-popup';
+            el.textContent = text;
+            container.appendChild(el);
+
+            // 3秒後に消える処理を追加
+            setTimeout(() => {
+                if (el && el.parentNode) {
+                    el.style.opacity = '0'; // フェードアウト
+                    setTimeout(() => {
+                        if (el && el.parentNode) el.remove(); // DOMから削除
+                    }, 500); // transitionの時間に合わせる
+                }
+            }, 3000);
+        }
+
+        function clearStatusMessage() {
+            const existing = document.querySelector('.status-message-popup');
+            if (existing) existing.remove();
         }
 
         function createParticle(startEl, endEl, color) {
@@ -1045,7 +1103,6 @@
                 showPopup(barAsset, AMOUNT_STEP, 'asset');
                 showPopup(barLiab, AMOUNT_STEP, 'liability');
                 
-                // Show Action Name
                 if (sector === 'govt') {
                     showActionName('card-govt', '借入（国債発行）', 'var(--liability-color)');
                 } else {
@@ -1063,14 +1120,12 @@
                     const barAsset = sector === 'govt' ? els.govtABar : els.privABar;
                     const barLiab = sector === 'govt' ? els.govtLBar : els.privLBar;
 
-                    // 修正: 資産と負債の両方から銀行へパーティクルを飛ばす
-                    createParticle(barAsset, els.bankNode, 'var(--asset-color)'); // 資産は緑
-                    createParticle(barLiab, els.bankNode, 'var(--liability-color)'); // 負債は赤
+                    createParticle(barAsset, els.bankNode, 'var(--asset-color)'); 
+                    createParticle(barLiab, els.bankNode, 'var(--liability-color)'); 
                     
                     showPopup(barAsset, -AMOUNT_STEP, 'asset');
                     showPopup(barLiab, -AMOUNT_STEP, 'liability');
                     
-                    // Show Action Name
                     if (sector === 'govt') {
                         showActionName('card-govt', '返済', '#f87171');
                     } else {
@@ -1177,6 +1232,7 @@
             document.body.classList.remove('debt-focus-mode');
             document.body.classList.remove('money-focus-mode');
             updateLabels();
+            clearStatusMessage();
             STATE.govt = { asset: 0, liability: 0 };
             STATE.private = { asset: 0, liability: 0, bonds: 0 };
             els.bankNode.style.transform = "scale(1.2)";
@@ -1191,6 +1247,7 @@
              STATE.govt = { asset: 0, liability: 1200 };
              STATE.private = { asset: 1800, liability: 600, bonds: 400 };
              updateUI();
+             showStatusMessage('現在の日本の貨幣状況');
         };
 
         document.getElementById('btn-debt-focus').onclick = () => {
