@@ -151,6 +151,7 @@
             flex: 1; 
             min-height: 0; /* Flexboxの子要素が縮めるようにする魔法 */
             transition: all 0.5s ease;
+            position: relative; /* ポップアップの基準点 */
         }
 
         .sector-govt {
@@ -409,6 +410,31 @@
         .btn-japan { background: #059669; color: white; padding: 4px 8px; font-size: 0.7rem;}
         .btn-debt { background: #ef4444; color: white; padding: 4px 8px; font-size: 0.7rem; }
         .btn-money { background: #10b981; color: white; padding: 4px 8px; font-size: 0.7rem; }
+
+        /* --- Action Name Popup --- */
+        .action-name-popup {
+            position: absolute;
+            top: 50px; /* カードの上部、ヘッダーの下あたり */
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2.5rem; /* フォントサイズを一回り大きく調整 */
+            font-weight: 900;
+            color: var(--text-main);
+            pointer-events: none;
+            z-index: 200;
+            opacity: 0;
+            animation: action-popup-anim 1.5s ease-out forwards;
+            text-shadow: 0 2px 10px rgba(255,255,255,0.9);
+            white-space: nowrap;
+        }
+
+        @keyframes action-popup-anim {
+            0% { opacity: 0; transform: translate(-50%, 15px) scale(0.8); }
+            10% { opacity: 1; transform: translate(-50%, 0) scale(1.1); }
+            20% { transform: translate(-50%, 0) scale(1); }
+            80% { opacity: 1; transform: translate(-50%, 0); }
+            100% { opacity: 0; transform: translate(-50%, -20px); }
+        }
 
         /* --- Debt Focus Mode (国の借金ボタン用) --- */
         body.debt-focus-mode {
@@ -955,6 +981,16 @@
             setTimeout(() => popup.remove(), 1200);
         }
 
+        function showActionName(cardId, text, color) {
+            const card = document.getElementById(cardId);
+            const el = document.createElement('div');
+            el.className = 'action-name-popup';
+            el.textContent = text;
+            if (color) el.style.color = color;
+            card.appendChild(el);
+            setTimeout(() => el.remove(), 1500);
+        }
+
         function createParticle(startEl, endEl, color) {
             const svgRect = els.svg.getBoundingClientRect();
             const startRect = startEl.getBoundingClientRect();
@@ -1008,6 +1044,14 @@
                 createParticle(els.bankNode, barLiab, 'var(--liability-color)');
                 showPopup(barAsset, AMOUNT_STEP, 'asset');
                 showPopup(barLiab, AMOUNT_STEP, 'liability');
+                
+                // Show Action Name
+                if (sector === 'govt') {
+                    showActionName('card-govt', '借入（国債発行）', 'var(--liability-color)');
+                } else {
+                    showActionName('card-private', '借入', 'var(--liability-color)');
+                }
+                
                 updateUI();
             },
             repay: (sector) => {
@@ -1025,6 +1069,14 @@
                     
                     showPopup(barAsset, -AMOUNT_STEP, 'asset');
                     showPopup(barLiab, -AMOUNT_STEP, 'liability');
+                    
+                    // Show Action Name
+                    if (sector === 'govt') {
+                        showActionName('card-govt', '返済', '#f87171');
+                    } else {
+                        showActionName('card-private', '返済', '#f87171');
+                    }
+
                     updateUI();
                 } else {
                     shake(sector === 'govt' ? els.cardGovt : els.cardPriv);
@@ -1037,6 +1089,9 @@
                     createParticle(els.govtABar, els.privABar, 'var(--govt-color)');
                     showPopup(els.govtABar, -AMOUNT_STEP, 'asset');
                     showPopup(els.privABar, AMOUNT_STEP, 'asset');
+                    
+                    showActionName('card-govt', '支出', 'var(--govt-color)');
+                    
                     updateUI();
                 } else {
                     shake(els.cardGovt);
@@ -1050,6 +1105,9 @@
                     createParticle(els.privABar, els.govtABar, 'var(--private-color)');
                     showPopup(els.privABar, -AMOUNT_STEP, 'asset');
                     showPopup(els.govtABar, AMOUNT_STEP, 'asset');
+                    
+                    showActionName('card-private', '納税', 'var(--private-color)');
+                    
                     updateUI();
                 } else {
                     shake(els.cardPriv);
@@ -1064,6 +1122,9 @@
                     createParticle(els.privABar, els.govtABar, 'var(--private-color)');
                     showPopup(els.govtABar, AMOUNT_STEP, 'asset');
                     showPopup(els.govtLBar, AMOUNT_STEP, 'liability');
+                    
+                    showActionName('card-private', '国債購入', '#3b82f6');
+                    
                     updateUI();
                 } else {
                     shake(els.cardPriv);
@@ -1077,6 +1138,9 @@
                     createParticle(els.govtABar, els.privABar, 'var(--govt-color)');
                     showPopup(els.govtLBar, -AMOUNT_STEP, 'liability');
                     showPopup(els.govtABar, -AMOUNT_STEP, 'asset');
+                    
+                    showActionName('card-private', '国債売却', '#06b6d4');
+                    
                     updateUI();
                 } else {
                     shake(els.cardGovt);
