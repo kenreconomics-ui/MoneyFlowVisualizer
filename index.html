@@ -1244,8 +1244,9 @@
              document.body.classList.remove('debt-focus-mode');
              document.body.classList.remove('money-focus-mode');
              updateLabels();
-             STATE.govt = { asset: 0, liability: 1200 };
-             STATE.private = { asset: 1800, liability: 600, bonds: 400 };
+             // 政府負債1300兆円、民間貨幣1500兆円(+国債400兆円)
+             STATE.govt = { asset: 0, liability: 1300 };
+             STATE.private = { asset: 1900, liability: 600, bonds: 400 };
              updateUI();
              showStatusMessage('現在の日本の貨幣状況');
         };
