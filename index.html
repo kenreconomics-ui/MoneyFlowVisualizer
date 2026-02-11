@@ -309,21 +309,23 @@
         
         .bs-bar-content {
             position: absolute;
-            bottom: 4px;
+            bottom: 2px;
             width: 100%;
             text-align: center;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-            line-height: 1.1;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.3); /* 文字が大きくなったので影も少し調整 */
+            line-height: 1.0;
             pointer-events: none;
-            font-size: 0.75rem;
+            /* 修正: フォントサイズを大幅に大きくし、太字にする */
+            font-size: 1.1rem; 
+            font-weight: 900;
         }
 
         .bs-label {
             text-align: center;
-            font-size: 0.7rem;
+            font-size: 1.0rem; /* フォントサイズを大きく変更 (0.7rem -> 1.0rem) */
             color: var(--text-sub);
             padding: 4px 0;
-            font-weight: 600;
+            font-weight: 700; /* 少し太くして見やすく */
             flex-shrink: 0; 
             background: rgba(255,255,255,0.5);
             transition: all 0.5s;
@@ -364,23 +366,6 @@
             transition: all 0.3s ease;
             border: 2px solid var(--bank-color);
             position: relative; /* メッセージの基準点 */
-        }
-
-        .bank-node {
-            width: 50px;
-            height: 50px;
-            background: white;
-            border-radius: 50%;
-            box-shadow: 0 0 0 4px rgba(100, 116, 139, 0.1), var(--shadow-lg);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid var(--bank-color);
-            position: relative;
         }
 
         .bank-node:hover { transform: scale(1.05); }
@@ -1244,9 +1229,8 @@
              document.body.classList.remove('debt-focus-mode');
              document.body.classList.remove('money-focus-mode');
              updateLabels();
-             // 政府負債1300兆円、民間貨幣1500兆円(+国債400兆円)
-             STATE.govt = { asset: 0, liability: 1300 };
-             STATE.private = { asset: 1900, liability: 600, bonds: 400 };
+             STATE.govt = { asset: 0, liability: 1200 };
+             STATE.private = { asset: 1800, liability: 600, bonds: 400 };
              updateUI();
              showStatusMessage('現在の日本の貨幣状況');
         };
