@@ -54,7 +54,8 @@
             backdrop-filter: blur(10px);
             padding: 8px 16px;
             display: flex;
-            justify-content: space-between;
+            /* 修正: 中身を中央寄せにする */
+            justify-content: center;
             align-items: center;
             box-shadow: var(--shadow-sm);
             z-index: 50;
@@ -64,6 +65,8 @@
         .header-content {
             display: flex;
             width: 100%;
+            /* 修正: コンテンツの最大幅を下のグリッド(1000px)に合わせる */
+            max-width: 1000px; 
             justify-content: space-between;
             align-items: center;
         }
