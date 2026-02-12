@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Modern Currency Flow Visualizer</title>
+    <title>Integrated Economy Model</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        /* =========================================
+           GLOBAL & MACRO VIEW STYLES (Original App)
+           ========================================= */
         :root {
             --bg-color: #f0f2f5;
             --card-bg: #ffffff;
@@ -23,9 +26,15 @@
             --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
             --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
             --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-            
-            /* JSで動的に設定される高さ */
             --app-height: 100vh;
+
+            /* Micro View Specific Colors */
+            --boj-color: #475569; 
+            --boj-bg: #f1f5f9;
+            --micro-bank-color: #2563eb; 
+            --micro-bank-bg: #eff6ff;
+            --jgb-color: #3b82f6;
+            --money-color: #10b981;
         }
 
         * {
@@ -39,39 +48,56 @@
             font-family: 'Inter', 'Noto Sans JP', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
-            /* 画面全体の高さを固定し、スクロールさせない */
             height: var(--app-height);
             width: 100vw;
-            display: flex;
-            flex-direction: column;
             overflow: hidden;
-            transition: background-color 0.5s;
+            position: relative; /* For view switching */
         }
 
-        /* --- Header --- */
-        .status-bar {
+        /* --- View Containers for Switching --- */
+        .view-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-color);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .view-hidden {
+            pointer-events: none;
+            opacity: 0;
+            transform: scale(0.95);
+            z-index: 0;
+        }
+
+        /* --- Original App Styles (Macro View) --- */
+        #macro-view .status-bar {
             background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(10px);
             padding: 8px 16px;
             display: flex;
-            /* 修正: 中身を中央寄せにする */
             justify-content: center;
             align-items: center;
             box-shadow: var(--shadow-sm);
             z-index: 50;
-            flex-shrink: 0; /* ヘッダーは縮まない */
+            flex-shrink: 0;
         }
 
-        .header-content {
+        #macro-view .header-content {
             display: flex;
             width: 100%;
-            /* 修正: コンテンツの最大幅を下のグリッド(1000px)に合わせる */
             max-width: 1000px; 
             justify-content: space-between;
             align-items: center;
         }
 
-        .app-title {
+        #macro-view .app-title {
             font-weight: 800;
             font-size: 1rem;
             display: flex;
@@ -79,13 +105,13 @@
             gap: 8px;
         }
         
-        .app-title span {
+        #macro-view .app-title span {
             background: linear-gradient(135deg, var(--govt-color), var(--private-color));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        .total-stats {
+        #macro-view .total-stats {
             display: flex;
             gap: 8px;
             font-size: 0.8rem;
@@ -93,7 +119,7 @@
             align-items: center;
         }
 
-        .stat-item {
+        #macro-view .stat-item {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
@@ -101,15 +127,14 @@
             transition: opacity 0.5s;
         }
         
-        .stat-label {
+        #macro-view .stat-label {
             font-size: 0.6rem;
             color: var(--text-sub);
             text-transform: uppercase;
         }
 
-        /* --- Main Canvas Area --- */
-        .canvas-container {
-            flex: 1; /* 残りの高さをすべて使う */
+        #macro-view .canvas-container {
+            flex: 1;
             position: relative;
             display: flex;
             flex-direction: column;
@@ -117,23 +142,17 @@
             align-items: stretch;
             overflow: hidden;
             padding: 10px;
-            /* 背景のライン用SVGコンテナ */
         }
 
-        svg {
+        #macro-view svg {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 1;
         }
 
-        /* スマホ・PC共通のFlexboxベースレイアウト */
-        .economy-grid {
+        #macro-view .economy-grid {
             display: flex;
-            flex-direction: column; /* デフォルトは縦並び（スマホ優先） */
+            flex-direction: column;
             width: 100%;
             height: 100%;
             position: relative;
@@ -141,8 +160,7 @@
             gap: 10px;
         }
 
-        /* --- Cards --- */
-        .sector-card {
+        #macro-view .sector-card {
             background: var(--card-bg);
             border-radius: 16px;
             padding: 12px;
@@ -150,21 +168,20 @@
             display: flex;
             flex-direction: column;
             border: 1px solid rgba(0,0,0,0.05);
-            /* 重要: 縦方向に伸縮してスペースを埋める */
             flex: 1; 
-            min-height: 0; /* Flexboxの子要素が縮めるようにする魔法 */
+            min-height: 0;
             transition: all 0.5s ease;
-            position: relative; /* ポップアップの基準点 */
+            position: relative;
             overflow: visible; 
         }
 
         .sector-govt {
-            background: linear-gradient(to bottom, #fff, var(--govt-bg));
+            background: linear-gradient(to bottom, #fff, var(--govt-bg)) !important;
             border-top: 3px solid var(--govt-color);
         }
 
         .sector-private {
-            background: linear-gradient(to bottom, #fff, var(--private-bg));
+            background: linear-gradient(to bottom, #fff, var(--private-bg)) !important;
             border-top: 3px solid var(--private-color);
         }
 
@@ -175,138 +192,64 @@
             margin-bottom: 8px;
             padding-bottom: 8px;
             border-bottom: 1px solid rgba(0,0,0,0.05);
-            flex-shrink: 0; /* ヘッダーは縮まない */
+            flex-shrink: 0;
             transition: opacity 0.5s;
-            flex-wrap: wrap; /* スマホで文字が長くなった時に折り返せるように */
+            flex-wrap: wrap;
         }
 
         .icon-box {
-            width: 28px;
-            height: 28px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            color: white;
-            flex-shrink: 0;
+            width: 28px; height: 28px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; color: white; flex-shrink: 0;
         }
 
         .sector-title { font-weight: 700; font-size: 0.9rem; }
-        .sector-subtitle { font-size: 0.7rem; color: var(--text-sub); }
-
-        /* 民間部門のタイトルインタラクション */
-        #private-sector-title {
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap; /* スマホ用 */
-        }
         
-        #private-sector-title:hover {
-            text-decoration: underline;
-            text-decoration-style: dotted;
-            text-underline-offset: 4px;
-        }
+        #private-sector-title { cursor: pointer; display: flex; align-items: center; flex-wrap: wrap; }
+        #private-sector-title:hover { text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 4px; }
 
-        /* 隠しテキスト（世代情報）のアニメーション */
         .generation-info {
-            display: inline-block;
-            font-size: 0.75rem;
-            color: #b45309; /* Dark orange */
-            background: #fffbeb;
-            border: 2px solid #f59e0b;
-            border-radius: 20px;
-            white-space: nowrap;
-            
-            /* 初期状態: 非表示 */
-            max-width: 0;
-            padding: 0;
-            margin-left: 0;
-            opacity: 0;
-            overflow: hidden;
-            transform: scale(0.9);
-            transform-origin: left center;
-            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); /* バウンドするような動き */
+            display: inline-block; font-size: 0.75rem; color: #b45309; background: #fffbeb;
+            border: 2px solid #f59e0b; border-radius: 20px; white-space: nowrap;
+            max-width: 0; padding: 0; margin-left: 0; opacity: 0; overflow: hidden;
+            transform: scale(0.9); transform-origin: left center;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .generation-info.visible {
-            max-width: 300px; /* 十分な幅 */
-            padding: 4px 10px;
-            margin-left: 8px;
-            opacity: 1;
-            transform: scale(1);
-            box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.3);
+            max-width: 300px; padding: 4px 10px; margin-left: 8px;
+            opacity: 1; transform: scale(1); box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.3);
         }
 
-        /* --- Bars & Charts --- */
-        .bs-container {
-            display: flex;
-            flex: 1; /* カード内でグラフエリアを最大化 */
-            gap: 10px;
-            align-items: stretch; 
-            min-height: 0; /* 重要 */
-        }
-
+        .bs-container { display: flex; flex: 1; gap: 10px; align-items: stretch; min-height: 0; }
+        
         .bs-column {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            position: relative;
-            background: rgba(0,0,0,0.02);
-            border-radius: 8px;
-            overflow: hidden;
-            transition: opacity 0.5s;
+            flex: 1; display: flex; flex-direction: column; height: 100%;
+            position: relative; background: rgba(0,0,0,0.02); border-radius: 8px;
+            overflow: hidden; transition: opacity 0.5s;
         }
 
         .chart-container {
-            flex: 1; /* 縦に伸びる */
-            width: 100%;
-            display: flex;
-            flex-direction: column-reverse; 
-            align-items: center;
-            justify-content: flex-start;
-            position: relative;
-            min-height: 0; /* 重要 */
+            flex: 1; width: 100%; display: flex; flex-direction: column-reverse;
+            align-items: center; justify-content: flex-start; position: relative; min-height: 0;
         }
 
         .bs-bar {
             width: 100%;
             transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s, transform 0.5s;
-            border-radius: 6px 6px 0 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 0.8rem;
-            min-height: 0px;
-            position: relative;
-            overflow: hidden;
+            border-radius: 6px 6px 0 0; display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: bold; font-size: 0.8rem; min-height: 0px; position: relative; overflow: hidden;
         }
         
         .bs-bar-content {
-            position: absolute;
-            bottom: 2px;
-            width: 100%;
-            text-align: center;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.3); /* 文字が大きくなったので影も少し調整 */
-            line-height: 1.0;
-            pointer-events: none;
-            /* 修正: フォントサイズを大幅に大きくし、太字にする */
-            font-size: 1.1rem; 
-            font-weight: 900;
+            position: absolute; bottom: 2px; width: 100%; text-align: center;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.3); line-height: 1.0; pointer-events: none;
+            font-size: 1.1rem; font-weight: 900;
         }
 
         .bs-label {
-            text-align: center;
-            font-size: 1.0rem; /* フォントサイズを大きく変更 (0.7rem -> 1.0rem) */
-            color: var(--text-sub);
-            padding: 4px 0;
-            font-weight: 700; /* 少し太くして見やすく */
-            flex-shrink: 0; 
-            background: rgba(255,255,255,0.5);
+            text-align: center; font-size: 1.0rem; color: var(--text-sub);
+            padding: 4px 0; font-weight: 700; flex-shrink: 0; background: rgba(255,255,255,0.5);
             transition: all 0.5s;
         }
 
@@ -314,98 +257,40 @@
         .bar-liability { background: var(--liability-color); }
         .bar-bond { background: var(--govt-color); opacity: 0.8; }
 
-        /* --- Bank Node --- */
         .center-column {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            height: 50px; 
-            flex-shrink: 0;
-            margin: -5px 0;
-            /* 修正: z-indexを上げて、メッセージが他のカードの下に潜らないようにする */
-            z-index: 500; 
-            transition: opacity 0.5s;
-            overflow: visible; /* ポップアップ用にはみ出し許可 */
+            display: flex; align-items: center; justify-content: center;
+            position: relative; height: 50px; flex-shrink: 0; margin: -5px 0;
+            z-index: 500; transition: opacity 0.5s; overflow: visible;
         }
 
         .bank-node {
-            width: 50px;
-            height: 50px;
-            background: white;
-            border-radius: 50%;
+            width: 50px; height: 50px; background: white; border-radius: 50%;
             box-shadow: 0 0 0 4px rgba(100, 116, 139, 0.1), var(--shadow-lg);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            /* 修正: 親(center-column)が高いのでここは相対的に管理 */
-            z-index: 10; 
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid var(--bank-color);
-            position: relative; /* メッセージの基準点 */
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 10; cursor: pointer; transition: all 0.3s ease;
+            border: 2px solid var(--bank-color); position: relative;
         }
 
-        .bank-node:hover { transform: scale(1.05); }
+        .bank-node:hover { transform: scale(1.05); border-color: #2563eb; }
         .bank-node:active { transform: scale(0.95); }
         .bank-icon { font-size: 1.2rem; }
         .bank-label { display: none; }
 
-        /* --- Controls --- */
         .control-deck {
-            background: white;
-            padding: 10px;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-shrink: 0;
-            z-index: 50;
-            overflow-x: auto;
-            border-top: 1px solid #eee;
-            transition: opacity 0.5s;
+            background: white; padding: 10px; box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+            display: flex; gap: 10px; justify-content: center; flex-shrink: 0;
+            z-index: 50; overflow-x: auto; border-top: 1px solid #eee; transition: opacity 0.5s;
         }
 
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            min-width: 100px;
-            flex-shrink: 0;
-        }
-
-        .group-label {
-            font-size: 0.6rem;
-            font-weight: 700;
-            color: var(--text-sub);
-            text-align: center;
-            text-transform: uppercase;
-        }
-
-        .btn-row {
-            display: flex;
-            gap: 4px;
-        }
+        .control-group { display: flex; flex-direction: column; gap: 4px; min-width: 100px; flex-shrink: 0; }
+        .group-label { font-size: 0.6rem; font-weight: 700; color: var(--text-sub); text-align: center; text-transform: uppercase; }
+        .btn-row { display: flex; gap: 4px; }
 
         button {
-            border: none;
-            padding: 8px 6px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.7rem;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            flex: 1;
-            white-space: nowrap;
-            color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: none; padding: 8px 6px; border-radius: 8px; font-weight: 600; font-size: 0.7rem;
+            cursor: pointer; transition: all 0.15s ease; display: flex; align-items: center; justify-content: center;
+            gap: 4px; flex: 1; white-space: nowrap; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-
         button:active { transform: translateY(1px); }
 
         .btn-borrow { background: var(--liability-color); }
@@ -419,28 +304,14 @@
         .btn-debt { background: #ef4444; color: white; padding: 4px 8px; font-size: 0.7rem; }
         .btn-money { background: #10b981; color: white; padding: 4px 8px; font-size: 0.7rem; }
 
-        /* --- Action Name Popup (修正版) --- */
+        /* Popups & Animations (Original) */
         .action-name-popup {
-            position: absolute;
-            /* カードの中央、少し上 */
-            top: 20%; 
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 2.2rem; /* 大きく */
-            font-weight: 900;
-            pointer-events: none;
-            z-index: 9999; /* 最強にする */
-            opacity: 0;
-            animation: action-popup-anim 1.2s ease-out forwards;
+            position: absolute; top: 20%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 2.2rem; font-weight: 900; pointer-events: none; z-index: 9999;
+            opacity: 0; animation: action-popup-anim 1.2s ease-out forwards;
             text-shadow: 0 4px 10px rgba(255,255,255,1), 0 0 5px rgba(255,255,255,0.8);
-            white-space: nowrap;
-            /* 文字が見やすいように背景をうっすら */
-            background: rgba(255,255,255,0.4);
-            padding: 5px 15px;
-            border-radius: 10px;
-            backdrop-filter: blur(2px);
+            white-space: nowrap; background: rgba(255,255,255,0.4); padding: 5px 15px; border-radius: 10px; backdrop-filter: blur(2px);
         }
-
         @keyframes action-popup-anim {
             0% { opacity: 0; transform: translate(-50%, 0) scale(0.5); }
             15% { opacity: 1; transform: translate(-50%, -20px) scale(1.2); }
@@ -449,193 +320,31 @@
             100% { opacity: 0; transform: translate(-50%, -50px); }
         }
 
-        /* --- Status Message Popup (修正版) --- */
         .status-message-popup {
-            position: absolute;
-            /* 銀行ノード(50px)の上側に配置。サイズが大きいのでかなり上に */
-            top: -100px; 
-            left: 50%;
-            transform: translateX(-50%);
-            /* サイズを大幅アップ (0.85rem -> 1.6rem) */
-            font-size: 1.6rem;
-            font-weight: 900;
-            color: #059669;
-            background: rgba(255, 255, 255, 0.98);
-            padding: 12px 24px;
-            border-radius: 50px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.25); 
-            pointer-events: none;
-            z-index: 10000 !important; /* 最前面 */
-            white-space: nowrap;
-            opacity: 0;
-            border: 4px solid #059669;
-            /* アニメーション設定 */
+            position: absolute; top: -100px; left: 50%; transform: translateX(-50%);
+            font-size: 1.6rem; font-weight: 900; color: #059669; background: rgba(255, 255, 255, 0.98);
+            padding: 12px 24px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); 
+            pointer-events: none; z-index: 10000 !important; white-space: nowrap;
+            opacity: 0; border: 4px solid #059669;
             animation: status-popup-appear 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-            transition: opacity 0.5s ease; /* 消えるとき用 */
+            transition: opacity 0.5s ease;
         }
-
         @keyframes status-popup-appear {
             0% { opacity: 0; transform: translate(-50%, 40px) scale(0.5); }
             100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
         }
 
-        /* --- Debt Focus Mode (国の借金ボタン用) --- */
-        body.debt-focus-mode {
-            background-color: #222; /* 背景を暗くして不気味に */
+        .popup-number {
+            position: absolute; font-weight: 800; font-size: 1.2rem; pointer-events: none;
+            animation: popup-float 1.2s ease-out forwards; z-index: 100;
+            text-shadow: 0 2px 4px rgba(255,255,255,0.8);
+        }
+        @keyframes popup-float {
+            0% { opacity: 0; transform: translate(-50%, 0) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -20px) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -60px) scale(1); }
         }
 
-        /* 修正: コンテナのはみ出し禁止を解除し、z-indexを上げてボタンより手前にする */
-        body.debt-focus-mode .canvas-container {
-            overflow: visible !important;
-            z-index: 3000;
-        }
-
-        /* 消す要素たち（半透明にして目立たなくする） */
-        body.debt-focus-mode .sector-private,
-        body.debt-focus-mode .center-column,
-        body.debt-focus-mode #govt-asset-bar,
-        body.debt-focus-mode #label-govt-asset,
-        body.debt-focus-mode .sector-header,
-        body.debt-focus-mode .control-deck,
-        body.debt-focus-mode .stat-item:not(.stat-debt-only) {
-            opacity: 0.05;
-            filter: blur(2px);
-            pointer-events: none;
-        }
-
-        /* 政府のカード自体は枠線を消して背景になじませるが、z-indexは最強にする */
-        body.debt-focus-mode #card-govt {
-            background: transparent;
-            box-shadow: none;
-            border-color: transparent;
-            z-index: 3001 !important; /* ボタン(z-index:50)より確実に前に */
-            position: relative;
-        }
-        
-        /* グラフを囲む要素のはみ出し禁止を解除し、文字が見えるようにする */
-        body.debt-focus-mode #card-govt .bs-container,
-        body.debt-focus-mode #card-govt .bs-column,
-        body.debt-focus-mode #card-govt .chart-container,
-        body.debt-focus-mode #govt-liability-bar {
-            overflow: visible !important;
-        }
-
-        body.debt-focus-mode .sector-govt {
-            background: transparent;
-            border-top-color: transparent;
-        }
-        body.debt-focus-mode .bs-column {
-            background: transparent;
-        }
-
-        /* 唯一残す「国の借金（負債バー）」を強調 */
-        body.debt-focus-mode #govt-liability-bar {
-            opacity: 1 !important;
-            /* 修正: バー自体は少し強調する程度にとどめる */
-            transform: scale(1.05);
-            box-shadow: 0 0 40px rgba(239, 68, 68, 0.9);
-            z-index: 3002; /* カードよりさらに前 */
-        }
-        
-        body.debt-focus-mode #label-govt-liability {
-            opacity: 1 !important;
-            font-size: 1.8rem; /* さらに大きく */
-            color: #ef4444;
-            font-weight: 900;
-            background: transparent;
-            text-shadow: 0 0 10px rgba(0,0,0,1);
-            /* 修正: 文字がグラフに被らないよう、ガッツリ下に下げる */
-            transform: translateY(60px) scale(1.3);
-            z-index: 3003; /* 何よりも前 */
-            position: relative;
-            white-space: nowrap; /* 折り返し防止 */
-        }
-
-        /* ヘッダーのボタンを目立たせる */
-        body.debt-focus-mode .btn-debt {
-            box-shadow: 0 0 15px #ef4444;
-            transform: scale(1.1);
-        }
-
-        /* --- Money Focus Mode (民間の貨幣ボタン用) --- */
-        body.money-focus-mode {
-            background-color: #222;
-        }
-
-        /* コンテナのはみ出し禁止解除 */
-        body.money-focus-mode .canvas-container {
-            overflow: visible !important;
-            z-index: 3000;
-        }
-
-        /* 消す要素たち */
-        body.money-focus-mode .sector-govt,
-        body.money-focus-mode .center-column,
-        body.money-focus-mode #private-bond-bar, /* 国債バーも消す */
-        body.money-focus-mode #private-liability-bar,
-        body.money-focus-mode #label-private-liability,
-        body.money-focus-mode .sector-header,
-        body.money-focus-mode .control-deck,
-        body.money-focus-mode .stat-item:not(.stat-money-only) {
-            opacity: 0.05;
-            filter: blur(2px);
-            pointer-events: none;
-        }
-
-        /* 民間のカード */
-        body.money-focus-mode #card-private {
-            background: transparent;
-            box-shadow: none;
-            border-color: transparent;
-            z-index: 3001 !important;
-            position: relative;
-        }
-
-        /* はみ出し許可 */
-        body.money-focus-mode #card-private .bs-container,
-        body.money-focus-mode #card-private .bs-column,
-        body.money-focus-mode #card-private .chart-container,
-        body.money-focus-mode #private-asset-bar {
-            overflow: visible !important;
-        }
-
-        body.money-focus-mode .sector-private {
-            background: transparent;
-            border-top-color: transparent;
-        }
-        body.money-focus-mode .bs-column {
-            background: transparent;
-        }
-
-        /* 唯一残す「貨幣」を強調 */
-        body.money-focus-mode #private-asset-bar {
-            opacity: 1 !important;
-            transform: scale(1.05);
-            box-shadow: 0 0 40px rgba(16, 185, 129, 0.9); /* 緑色の光 */
-            z-index: 3002;
-        }
-
-        body.money-focus-mode #label-private-asset {
-            opacity: 1 !important;
-            font-size: 1.8rem;
-            color: #10b981; /* 緑色 */
-            font-weight: 900;
-            background: transparent;
-            text-shadow: 0 0 10px rgba(0,0,0,1);
-            /* 下に移動して強調 */
-            transform: translateY(60px) scale(1.3);
-            z-index: 3003;
-            position: relative;
-            white-space: nowrap;
-        }
-        
-        body.money-focus-mode .btn-money {
-            box-shadow: 0 0 15px #10b981;
-            transform: scale(1.1);
-        }
-
-
-        /* --- Animations --- */
         @keyframes bank-pulse {
             0% { box-shadow: 0 0 0 0px rgba(100, 116, 139, 0.1); }
             50% { box-shadow: 0 0 0 8px rgba(100, 116, 139, 0.2); }
@@ -657,284 +366,559 @@
         .animate-shockwave { animation: shockwave 0.8s ease-out forwards; }
         
         .shockwave-ring {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            border-radius: 50%;
-            border: 2px solid var(--private-color);
-            pointer-events: none;
-            z-index: 5;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            border-radius: 50%; border: 2px solid var(--private-color);
+            pointer-events: none; z-index: 5;
         }
 
-        .popup-number {
-            position: absolute;
-            font-weight: 800;
-            font-size: 1.2rem;
-            pointer-events: none;
-            animation: popup-float 1.2s ease-out forwards;
-            z-index: 100;
-            text-shadow: 0 2px 4px rgba(255,255,255,0.8);
-        }
-        @keyframes popup-float {
-            0% { opacity: 0; transform: translate(-50%, 0) scale(0.5); }
-            20% { opacity: 1; transform: translate(-50%, -20px) scale(1.2); }
-            100% { opacity: 0; transform: translate(-50%, -60px) scale(1); }
-        }
+        /* --- Focus Modes (Original) --- */
+        body.debt-focus-mode { background-color: #222; }
+        body.debt-focus-mode .canvas-container { overflow: visible !important; z-index: 3000; }
+        body.debt-focus-mode .sector-private,
+        body.debt-focus-mode .center-column,
+        body.debt-focus-mode #govt-asset-bar,
+        body.debt-focus-mode #label-govt-asset,
+        body.debt-focus-mode .sector-header,
+        body.debt-focus-mode .control-deck,
+        body.debt-focus-mode .stat-item:not(.stat-debt-only) { opacity: 0.05; filter: blur(2px); pointer-events: none; }
+        
+        body.debt-focus-mode #card-govt { background: transparent; box-shadow: none; border-color: transparent; z-index: 3001 !important; position: relative; }
+        body.debt-focus-mode #card-govt .bs-container,
+        body.debt-focus-mode #card-govt .bs-column,
+        body.debt-focus-mode #card-govt .chart-container,
+        body.debt-focus-mode #govt-liability-bar { overflow: visible !important; }
+        body.debt-focus-mode .sector-govt { background: transparent !important; border-top-color: transparent; }
+        body.debt-focus-mode .bs-column { background: transparent; }
+        body.debt-focus-mode #govt-liability-bar { opacity: 1 !important; transform: scale(1.05); box-shadow: 0 0 40px rgba(239, 68, 68, 0.9); z-index: 3002; }
+        body.debt-focus-mode #label-govt-liability { opacity: 1 !important; font-size: 1.8rem; color: #ef4444; font-weight: 900; background: transparent; text-shadow: 0 0 10px rgba(0,0,0,1); transform: translateY(60px) scale(1.3); z-index: 3003; position: relative; white-space: nowrap; }
+        body.debt-focus-mode .btn-debt { box-shadow: 0 0 15px #ef4444; transform: scale(1.1); }
 
-        /* --- PC / Tablet Overrides --- */
+        body.money-focus-mode { background-color: #222; }
+        body.money-focus-mode .canvas-container { overflow: visible !important; z-index: 3000; }
+        body.money-focus-mode .sector-govt,
+        body.money-focus-mode .center-column,
+        body.money-focus-mode #private-bond-bar,
+        body.money-focus-mode #private-liability-bar,
+        body.money-focus-mode #label-private-liability,
+        body.money-focus-mode .sector-header,
+        body.money-focus-mode .control-deck,
+        body.money-focus-mode .stat-item:not(.stat-money-only) { opacity: 0.05; filter: blur(2px); pointer-events: none; }
+        
+        body.money-focus-mode #card-private { background: transparent; box-shadow: none; border-color: transparent; z-index: 3001 !important; position: relative; }
+        body.money-focus-mode #card-private .bs-container,
+        body.money-focus-mode #card-private .bs-column,
+        body.money-focus-mode #card-private .chart-container,
+        body.money-focus-mode #private-asset-bar { overflow: visible !important; }
+        body.money-focus-mode .sector-private { background: transparent !important; border-top-color: transparent; }
+        body.money-focus-mode .bs-column { background: transparent; }
+        body.money-focus-mode #private-asset-bar { opacity: 1 !important; transform: scale(1.05); box-shadow: 0 0 40px rgba(16, 185, 129, 0.9); z-index: 3002; }
+        body.money-focus-mode #label-private-asset { opacity: 1 !important; font-size: 1.8rem; color: #10b981; font-weight: 900; background: transparent; text-shadow: 0 0 10px rgba(0,0,0,1); transform: translateY(60px) scale(1.3); z-index: 3003; position: relative; white-space: nowrap; }
+        body.money-focus-mode .btn-money { box-shadow: 0 0 15px #10b981; transform: scale(1.1); }
+
+        /* Media Queries (Original) */
         @media (min-width: 769px) {
-            .economy-grid {
-                display: grid;
-                grid-template-columns: 1fr 120px 1fr;
-                gap: 40px;
-                max-width: 1000px;
-                margin: 0 auto;
-                height: 100%;
-                max-height: 500px;
-            }
-
-            .center-column {
-                height: auto;
-                margin: 0;
-            }
-
-            .bank-node {
-                width: 120px;
-                height: 120px;
-            }
+            #macro-view .economy-grid { display: grid; grid-template-columns: 1fr 120px 1fr; gap: 40px; max-width: 1000px; margin: 0 auto; height: 100%; max-height: 500px; }
+            .center-column { height: auto; margin: 0; }
+            .bank-node { width: 120px; height: 120px; }
             .bank-label { display: block; margin-top: 4px; font-size: 0.75rem; text-align: center; color: var(--bank-color); font-weight: bold;}
             .bank-icon { font-size: 2rem; }
-
-            .control-deck {
-                justify-content: center;
-                gap: 30px;
-            }
-            
-            button {
-                padding: 10px 16px;
-                font-size: 0.85rem;
-            }
-            
+            .control-deck { justify-content: center; gap: 30px; }
+            button { padding: 10px 16px; font-size: 0.85rem; }
             .group-label { font-size: 0.75rem; }
             .btn-reset, .btn-japan, .btn-debt, .btn-money { padding: 6px 12px; font-size: 0.8rem; }
-            
             .stat-label { font-size: 0.7rem; }
-            .total-stats { font-size: 0.9rem; }
+            #macro-view .total-stats { font-size: 0.9rem; }
         }
-        
+
         /* Intro Modal */
         .overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(5px);
-            z-index: 999;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
+            z-index: 999; display: flex; justify-content: center; align-items: center;
+            padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s;
         }
         .overlay.visible { opacity: 1; pointer-events: auto; }
-        
-        .modal {
-            background: white;
-            border-radius: 24px;
-            padding: 24px;
-            max-width: 400px;
-            width: 100%;
-            text-align: center;
-        }
+        .modal { background: white; border-radius: 24px; padding: 24px; max-width: 400px; width: 100%; text-align: center; }
         .modal h2 { margin-bottom: 12px; font-size: 1.2rem; color: var(--text-main); }
         .modal p { color: var(--text-sub); line-height: 1.5; margin-bottom: 20px; font-size: 0.9rem; text-align: left;}
         .modal-btn { background: var(--govt-color); width: 100%; padding: 12px; font-size: 1rem; }
 
+        /* =========================================
+           MICRO VIEW STYLES (Monetary Policy)
+           ========================================= */
+        /* Common layout wrapper for alignment */
+        .micro-layout-row {
+            width: 100%;
+            max-width: 840px; /* Aligned with Cards (400*2 + 40 gap) */
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #micro-view .header {
+            background: rgba(255, 255, 255, 0.95);
+            /* Padding adjustment: Unified 20px left/right to match cards container */
+            padding: 12px 20px; 
+            display: flex; justify-content: center; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            z-index: 50; flex-shrink: 0;
+        }
+        
+        #micro-view .back-btn {
+            background: white; color: var(--text-main); border: 1px solid #e2e8f0;
+            padding: 6px 12px; font-size: 0.8rem; box-shadow: none; flex: 0 0 auto;
+        }
+        #micro-view .back-btn:hover { background: #f1f5f9; }
+
+        .micro-stats { display: flex; gap: 10px; align-items: center;}
+        
+        /* Stats Box Design */
+        .m-stat-box {
+            background: #fff; padding: 4px 10px; border-radius: 12px; border: 1px solid #e2e8f0;
+            display: flex; flex-direction: column; align-items: flex-end; min-width: 80px;
+        }
+        .m-stat-lbl { font-size: 0.9rem; color: var(--text-sub); font-weight: 700; white-space: nowrap; } 
+        .m-stat-val { font-size: 1.1rem; font-weight: 800; }
+        .val-m { color: var(--money-color); }
+        .val-j { color: var(--jgb-color); }
+        .val-t { color: #64748b; }
+
+        /* Gauge Design */
+        .gauge-container { width: 60px; height: 36px; overflow: hidden; position: relative; margin-bottom: -2px;}
+        .gauge-svg { width: 100%; height: 100%; }
+        #gauge-needle { 
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); 
+            transform-box: view-box;
+            transform-origin: 50px 50px;
+        }
+
+        #micro-view .main-container {
+            flex: 1; display: flex; flex-direction: column; justify-content: center; 
+            /* Added padding 20px to align with header/footer */
+            padding: 20px; 
+            gap: 20px; position: relative; overflow-y: auto;
+        }
+
+        /* Wrapper for cards to handle gap and alignment */
+        .micro-card-container {
+            display: flex; gap: 40px; justify-content: space-between; width: 100%;
+            height: 500px; /* Explicit height to prevent collapse */
+        }
+
+        .micro-card {
+            background: #fff; border-radius: 16px; box-shadow: var(--shadow-lg);
+            width: 100%; max-width: 400px; height: 100%; max-height: 550px;
+            display: flex; flex-direction: column; border: 1px solid rgba(0,0,0,0.05);
+            position: relative; flex: 1;
+        }
+        .card-boj { border-top: 4px solid var(--boj-color); }
+        .card-bank { border-top: 4px solid var(--micro-bank-color); }
+
+        .mc-header { padding: 16px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 10px; }
+        .mc-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: white; }
+        .icon-boj { background: var(--boj-color); }
+        .icon-bank { background: var(--micro-bank-color); }
+        .mc-title h2 { font-size: 1rem; font-weight: 700; }
+        .mc-title p { font-size: 0.7rem; color: var(--text-sub); }
+
+        .mc-body { flex: 1; padding: 16px; display: flex; gap: 8px; }
+        .mc-col { flex: 1; display: flex; flex-direction: column; background: #f8fafc; border-radius: 8px; position: relative; overflow: visible; }
+        .mc-col-hdr { text-align: center; font-size: 0.75rem; color: var(--text-sub); padding: 6px; font-weight: 700; border-bottom: 1px solid #e2e8f0; background: rgba(255,255,255,0.5); }
+        
+        .stack-box { flex: 1; display: flex; flex-direction: column-reverse; justify-content: flex-start; padding: 4px; gap: 2px; position: relative; }
+        
+        .block {
+            width: 100%; border-radius: 4px; display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 700; font-size: 1.0rem;
+            transition: height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative; overflow: hidden; min-height: 0;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .blk-jgb { background: var(--jgb-color); }
+        .blk-money { background: var(--money-color); }
+        .blk-liab { background: #cbd5e1; color: #64748b; }
+        .block:hover::after {
+            content: attr(data-val) "兆円"; position: absolute; background: rgba(0,0,0,0.8);
+            color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem;
+            top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 20; white-space: nowrap;
+        }
+
+        #micro-view .control-panel {
+            /* Padding adjustment: Unified 20px left/right to match cards container */
+            background: white; padding: 12px 20px; box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+            display: flex; justify-content: center; align-items: center; z-index: 50; flex-shrink: 0;
+        }
+        
+        .op-btn { padding: 12px 24px; font-size: 0.9rem; margin-right: 8px;}
+        .btn-buy-op { background: var(--money-color); }
+        .btn-sell-op { background: var(--jgb-color); }
+
+        .flash { animation: flash 0.4s ease-out; }
+        @keyframes flash {
+            0% { filter: brightness(1); transform: scale(1); }
+            30% { filter: brightness(1.3); transform: scale(1.02); }
+            100% { filter: brightness(1); transform: scale(1); }
+        }
+
+        .action-popup {
+            position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 2rem; font-weight: 900; pointer-events: none; z-index: 9999;
+            opacity: 0; animation: action-anim 1.2s ease-out forwards;
+            background: rgba(255,255,255,0.7); padding: 10px 20px; border-radius: 12px;
+            backdrop-filter: blur(2px); border: 2px solid rgba(0,0,0,0.1); white-space: nowrap;
+        }
+        @keyframes action-anim {
+            0% { opacity: 0; transform: translate(-50%, 0) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -20px) scale(1.1); }
+            80% { opacity: 1; transform: translate(-50%, -20px); }
+            100% { opacity: 0; transform: translate(-50%, -50px); }
+        }
+
+        /* Micro View Media Queries */
+        @media (max-width: 768px) {
+            #micro-view .main-container { padding: 10px; }
+            .micro-layout-row { flex-direction: column; gap: 10px; max-width: 100%; }
+            .micro-card-container { flex-direction: column; gap: 20px; height: auto; }
+            .micro-card { max-height: 280px; max-width: 100%; height: 300px; }
+            .mc-col { flex-direction: column-reverse; }
+            .stack-box { flex-direction: column-reverse; align-items: stretch; }
+            .block { width: 100% !important; height: auto !important; writing-mode: horizontal-tb; font-size: 0.8rem; }
+            /* Mobile adjustment for header */
+            #micro-view .header .micro-layout-row { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+            #micro-view .control-panel .micro-layout-row { flex-direction: row; }
+        }
     </style>
 </head>
 <body>
 
-    <header class="status-bar" id="header">
-        <div class="header-content">
-            <div class="app-title">
-                <span>💴 Economy Flow</span>
+    <!-- =========================================
+         MACRO VIEW (Original Economy Flow)
+         ========================================= -->
+    <div id="macro-view" class="view-container">
+        <header class="status-bar" id="header">
+            <div class="header-content">
+                <div class="app-title">
+                    <span>💴 Economy Flow</span>
+                </div>
+                <div class="total-stats">
+                    <div class="stat-item stat-debt-only">
+                        <span class="stat-label">政府純資産</span>
+                        <span id="govt-net-display" style="color: var(--liability-color)">0兆円</span>
+                    </div>
+                    <div class="stat-item stat-money-only">
+                        <span class="stat-label">民間純資産</span>
+                        <span id="private-net-display" style="color: var(--asset-color)">0兆円</span>
+                    </div>
+                    <button class="btn-japan" id="btn-japan">🇯🇵 現状</button>
+                    <button class="btn-debt" id="btn-debt-focus">😱 国の借金</button>
+                    <button class="btn-money" id="btn-money-focus">💰 民間の貨幣</button>
+                    <button class="btn-reset" id="reset-btn">リセット</button>
+                </div>
             </div>
-            <div class="total-stats">
-                <div class="stat-item stat-debt-only">
-                    <span class="stat-label">政府純資産</span>
-                    <span id="govt-net-display" style="color: var(--liability-color)">0兆円</span>
+        </header>
+
+        <div class="canvas-container">
+            <svg id="flow-lines"></svg>
+
+            <div class="economy-grid">
+                <div class="sector-card sector-govt" id="card-govt">
+                    <div class="sector-header">
+                        <div class="icon-box" style="background: var(--govt-color);">🏛️</div>
+                        <div class="sector-title">政府部門</div>
+                    </div>
+                    <div class="bs-container">
+                        <div class="bs-column">
+                            <div class="chart-container">
+                                <div class="bs-bar bar-asset" id="govt-asset-bar" style="height: 0%;">
+                                    <span class="bs-bar-content" id="govt-asset-val">0</span>
+                                </div>
+                            </div>
+                            <div class="bs-label" id="label-govt-asset">資産<br>(政府預金)</div>
+                        </div>
+                        <div class="bs-column">
+                            <div class="chart-container">
+                                <div class="bs-bar bar-liability" id="govt-liability-bar" style="height: 0%;">
+                                    <span class="bs-bar-content" id="govt-liability-val">0</span>
+                                </div>
+                            </div>
+                            <div class="bs-label" id="label-govt-liability">負債<br>(国債)</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-item stat-money-only">
-                    <span class="stat-label">民間純資産</span>
-                    <span id="private-net-display" style="color: var(--asset-color)">0兆円</span>
+
+                <div class="center-column">
+                    <div class="bank-node" id="bank-node" title="詳細を見る">
+                        <div class="bank-icon">🏦</div>
+                        <div class="bank-label">銀行システム</div>
+                        <div class="shockwave-ring" id="bank-shockwave"></div>
+                    </div>
                 </div>
-                <div class="stat-item" style="display: none;">
-                    <span class="stat-label">経済規模</span>
-                    <span id="total-economy-display">0兆円</span>
+
+                <div class="sector-card sector-private" id="card-private">
+                    <div class="sector-header">
+                        <div class="icon-box" style="background: var(--private-color);">🏢</div>
+                        <div class="sector-title" id="private-sector-title">民間部門<span class="generation-info" id="private-generation-info">将来世代＋現役世代＋高齢世代</span></div>
+                    </div>
+                    <div class="bs-container">
+                        <div class="bs-column">
+                            <div class="chart-container">
+                                <div class="bs-bar bar-asset" id="private-asset-bar" style="height: 0%; z-index: 2;">
+                                    <span class="bs-bar-content" id="private-asset-val">0</span>
+                                </div>
+                                <div class="bs-bar bar-bond" id="private-bond-bar" style="height: 0%; z-index: 1;">
+                                    <span class="bs-bar-content" style="bottom: auto; top: 5px; color: white;">
+                                        国債<br><span id="private-bond-val">0</span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="bs-label" id="label-private-asset">資産<br>(貨幣+国債)</div>
+                        </div>
+                        <div class="bs-column">
+                            <div class="chart-container">
+                                <div class="bs-bar bar-liability" id="private-liability-bar" style="height: 0%;">
+                                    <span class="bs-bar-content" id="private-liability-val">0</span>
+                                </div>
+                            </div>
+                            <div class="bs-label" id="label-private-liability">負債<br>(借入金)</div>
+                        </div>
+                    </div>
                 </div>
-                <button class="btn-japan" id="btn-japan">🇯🇵 現状</button>
-                <button class="btn-debt" id="btn-debt-focus">😱 国の借金</button>
-                <button class="btn-money" id="btn-money-focus">💰 民間の貨幣</button>
-                <button class="btn-reset" id="reset-btn">リセット</button>
             </div>
         </div>
-    </header>
 
-    <div class="canvas-container">
-        <svg id="flow-lines">
-        </svg>
-
-        <div class="economy-grid">
-            <div class="sector-card sector-govt" id="card-govt">
-                <div class="sector-header">
-                    <div class="icon-box" style="background: var(--govt-color);">🏛️</div>
-                    <div class="sector-title">政府部門</div>
+        <div class="control-deck" id="footer">
+            <div class="control-group">
+                <div class="group-label" style="color: var(--govt-color)">政府</div>
+                <div class="btn-row">
+                    <button class="btn-borrow" id="btn-govt-borrow">📉 借入</button>
+                    <button class="btn-repay" id="btn-govt-repay">↩️ 返済</button>
                 </div>
-                <div class="bs-container">
-                    <div class="bs-column">
-                        <div class="chart-container">
-                            <div class="bs-bar bar-asset" id="govt-asset-bar" style="height: 0%;">
-                                <span class="bs-bar-content" id="govt-asset-val">0</span>
-                            </div>
-                        </div>
-                        <div class="bs-label" id="label-govt-asset">資産<br>(政府預金)</div>
-                    </div>
-                    <div class="bs-column">
-                        <div class="chart-container">
-                            <div class="bs-bar bar-liability" id="govt-liability-bar" style="height: 0%;">
-                                <span class="bs-bar-content" id="govt-liability-val">0</span>
-                            </div>
-                        </div>
-                        <div class="bs-label" id="label-govt-liability">負債<br>(国債)</div>
-                    </div>
+                <div class="btn-row">
+                    <button class="btn-spend" id="btn-govt-spend">💸 支出</button>
                 </div>
             </div>
 
-            <div class="center-column">
-                <div class="bank-node" id="bank-node" title="銀行システム">
-                    <div class="bank-icon">🏦</div>
-                    <div class="bank-label">銀行システム</div>
-                    <div class="shockwave-ring" id="bank-shockwave"></div>
+            <div class="control-group">
+                <div class="group-label" style="color: var(--text-sub)">市場</div>
+                <div class="btn-row">
+                    <button class="btn-bond" id="btn-bond-buy">📜 買入</button>
+                    <button class="btn-redeem" id="btn-bond-sell">💰 売却</button>
                 </div>
             </div>
 
-            <div class="sector-card sector-private" id="card-private">
-                <div class="sector-header">
-                    <div class="icon-box" style="background: var(--private-color);">🏢</div>
-                    <!-- クリックイベントと隠し要素 -->
-                    <div class="sector-title" id="private-sector-title">民間部門<span class="generation-info" id="private-generation-info">将来世代＋現役世代＋高齢世代</span></div>
+            <div class="control-group">
+                <div class="group-label" style="color: var(--private-color)">民間</div>
+                <div class="btn-row">
+                    <button class="btn-borrow" id="btn-private-borrow">📉 借入</button>
+                    <button class="btn-repay" id="btn-private-repay">↩️ 返済</button>
                 </div>
-                <div class="bs-container">
-                    <div class="bs-column">
-                        <div class="chart-container">
-                            <div class="bs-bar bar-asset" id="private-asset-bar" style="height: 0%; z-index: 2;">
-                                <span class="bs-bar-content" id="private-asset-val">0</span>
-                            </div>
-                            <div class="bs-bar bar-bond" id="private-bond-bar" style="height: 0%; z-index: 1;">
-                                <span class="bs-bar-content" style="bottom: auto; top: 5px; color: white;">
-                                    国債<br><span id="private-bond-val">0</span>
-                                </span>
-                            </div>
-                        </div>
-                        <div class="bs-label" id="label-private-asset">資産<br>(貨幣+国債)</div>
-                    </div>
-                    <div class="bs-column">
-                        <div class="chart-container">
-                            <div class="bs-bar bar-liability" id="private-liability-bar" style="height: 0%;">
-                                <span class="bs-bar-content" id="private-liability-val">0</span>
-                            </div>
-                        </div>
-                        <div class="bs-label" id="label-private-liability">負債<br>(借入金)</div>
-                    </div>
+                <div class="btn-row">
+                    <button class="btn-tax" id="btn-tax">🏛️ 納税</button>
                 </div>
+            </div>
+        </div>
+
+        <div class="overlay visible" id="intro-overlay">
+            <div class="modal">
+                <h2>貨幣フローシミュレーター</h2>
+                <p>
+                    お金がどこから生まれ、どう消えるか（信用創造）を体験できるシミュレーターです。<br><br>
+                    <strong>🏦 中央：</strong> 銀行システム（クリックで詳細へ）<br><br>
+                    借入や返済によって、マネーがどのように増減するか観察しましょう。<br>
+                    <strong>「🇯🇵 現状」</strong>ボタンを押すと、現在の日本のバランスシート状況が再現されます。
+                </p>
+                <button class="modal-btn" onclick="document.getElementById('intro-overlay').classList.remove('visible')">シミュレーション開始</button>
             </div>
         </div>
     </div>
 
-    <div class="control-deck" id="footer">
-        <div class="control-group">
-            <div class="group-label" style="color: var(--govt-color)">政府</div>
-            <div class="btn-row">
-                <button class="btn-borrow" id="btn-govt-borrow">📉 借入</button>
-                <button class="btn-repay" id="btn-govt-repay">↩️ 返済</button>
+    <!-- =========================================
+         MICRO VIEW (Monetary Policy)
+         ========================================= -->
+    <div id="micro-view" class="view-container view-hidden">
+        <header class="header">
+            <div class="micro-layout-row">
+                <!-- Left aligned group -->
+                <div style="display: flex; gap:10px; align-items: center; justify-content: flex-start; flex: 1;">
+                    <button class="back-btn" id="btn-back-macro">⬅ 全体図へ戻る</button>
+                    <div style="font-weight: 800; white-space: nowrap;">金融調節</div>
+                </div>
+                
+                <!-- Right aligned stats -->
+                <div class="micro-stats">
+                    <div class="m-stat-box" style="align-items: center; min-width: 80px;">
+                        <div class="gauge-container">
+                            <svg viewBox="0 0 100 60" class="gauge-svg">
+                                <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#e2e8f0" stroke-width="8" stroke-linecap="round"/>
+                                <line id="gauge-needle" x1="50" y1="50" x2="50" y2="15" stroke="#ef4444" stroke-width="4" stroke-linecap="round" />
+                                <circle cx="50" cy="50" r="4" fill="#1e293b"/>
+                            </svg>
+                        </div>
+                        <span class="m-stat-lbl" style="margin-top: -5px; font-size: 0.8rem;">政策金利</span>
+                    </div>
+
+                    <div class="m-stat-box">
+                        <span class="m-stat-lbl">日銀当座預金</span>
+                        <span class="m-stat-val val-m"><span id="total-money">0</span>兆</span>
+                    </div>
+                    <div class="m-stat-box">
+                        <span class="m-stat-lbl">銀行内国債総残高</span>
+                        <span class="m-stat-val val-t"><span id="market-jgb-total">500</span>兆</span>
+                    </div>
+                </div>
             </div>
-            <div class="btn-row">
-                <button class="btn-spend" id="btn-govt-spend">💸 支出</button>
+        </header>
+
+        <div class="main-container">
+            <div class="micro-layout-row">
+                <div class="micro-card-container">
+                    <!-- BOJ Card -->
+                    <div class="micro-card card-boj">
+                        <div class="mc-header">
+                            <div class="mc-icon icon-boj">🏛️</div>
+                            <div class="mc-title">
+                                <h2>日本銀行</h2>
+                                <p>Central Bank</p>
+                            </div>
+                        </div>
+                        <div class="mc-body">
+                            <div class="mc-col">
+                                <div class="stack-box">
+                                    <div class="block blk-jgb" id="boj-jgb" style="height: 50%;">国債</div>
+                                </div>
+                                <div class="mc-col-hdr">資産</div>
+                            </div>
+                            <div class="mc-col">
+                                <div class="stack-box">
+                                    <div class="block blk-money" id="boj-deposit" style="height: 50%;">日銀当座預金</div>
+                                </div>
+                                <div class="mc-col-hdr">負債</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Private Bank Card -->
+                    <div class="micro-card card-bank">
+                        <div class="mc-header">
+                            <div class="mc-icon icon-bank">🏢</div>
+                            <div class="mc-title">
+                                <h2>民間銀行</h2>
+                                <p>Private Banks</p>
+                            </div>
+                        </div>
+                        <div class="mc-body">
+                            <div class="mc-col">
+                                <div class="stack-box">
+                                    <div class="block blk-jgb" id="bank-jgb" style="height: 30%;">国債</div>
+                                    <div class="block blk-money" id="bank-deposit" style="height: 20%;">日銀当座預金</div>
+                                </div>
+                                <div class="mc-col-hdr">資産</div>
+                            </div>
+                            <div class="mc-col">
+                                <div class="stack-box">
+                                    <div class="block blk-liab" id="bank-liab" style="height: 100%;">民間預金など</div>
+                                </div>
+                                <div class="mc-col-hdr">負債</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="control-group">
-            <div class="group-label" style="color: var(--text-sub)">市場</div>
-            <div class="btn-row">
-                <button class="btn-bond" id="btn-bond-buy">📜 買入</button>
-                <button class="btn-redeem" id="btn-bond-sell">💰 売却</button>
+        <div class="control-panel">
+            <div class="micro-layout-row">
+                <div style="display: flex;">
+                    <button class="op-btn btn-buy-op" id="btn-buy-op"><span>📈 買いオペ</span></button>
+                    <button class="op-btn btn-sell-op" id="btn-sell-op"><span>📉 売りオペ</span></button>
+                </div>
+                <div>
+                    <button class="btn-reset" id="btn-micro-reset" style="background:var(--text-sub)">リセット</button>
+                </div>
             </div>
-        </div>
-
-        <div class="control-group">
-            <div class="group-label" style="color: var(--private-color)">民間</div>
-            <div class="btn-row">
-                <button class="btn-borrow" id="btn-private-borrow">📉 借入</button>
-                <button class="btn-repay" id="btn-private-repay">↩️ 返済</button>
-            </div>
-            <div class="btn-row">
-                <button class="btn-tax" id="btn-tax">🏛️ 納税</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="overlay visible" id="intro-overlay">
-        <div class="modal">
-            <h2>貨幣フローシミュレーター</h2>
-            <p>
-                お金がどこから生まれ、どう消えるか（信用創造）を体験できるシミュレーターです。<br><br>
-                <strong>🏦 中央：</strong> 銀行システム（中央銀行＋民間銀行）<br><br>
-                借入や返済によって、マネーがどのように増減するか観察しましょう。<br>
-                <strong>「🇯🇵 現状」</strong>ボタンを押すと、現在の日本のバランスシート状況が再現されます。
-            </p>
-            <button class="modal-btn" onclick="document.getElementById('intro-overlay').classList.remove('visible')">シミュレーション開始</button>
         </div>
     </div>
 
     <script>
-        // --- 画面サイズ調整ロジック ---
-        function adjustAppHeight() {
-            const vh = window.innerHeight;
-            document.documentElement.style.setProperty('--app-height', `${vh}px`);
-        }
+        // --- NAVIGATION LOGIC ---
+        const viewMacro = document.getElementById('macro-view');
+        const viewMicro = document.getElementById('micro-view');
 
-        window.addEventListener('resize', adjustAppHeight);
-        adjustAppHeight();
-
-
-        // --- Logic & State ---
-        const STATE = {
-            govt: { asset: 0, liability: 0 },
-            private: { asset: 0, liability: 0, bonds: 0 }
-        };
+        // =======================================================
+        //  STATE DEFINITIONS
+        // =======================================================
         
+        // MACRO STATE
+        const STATE = {
+            govt: { asset: 0, liability: 0 }, 
+            private: { asset: 0, liability: 0, bonds: 0 } 
+        };
         const AMOUNT_STEP = 100;
 
-        // DOM Elements
+        // MICRO STATE
+        const MICRO_CONFIG = { step: 100, max: 800 };
+        // Initial defaults
+        const MICRO_INITIAL = { boj: { jgb: 0, deposit: 0 }, bank: { jgb: 0, deposit: 0, liabilities: 0 } };
+        let microState = JSON.parse(JSON.stringify(MICRO_INITIAL));
+        let interestRateAngle = 0; // Gauge angle
+
+        // Navigation & Sync Logic
+        document.getElementById('bank-node').addEventListener('click', () => {
+            syncMacroToMicro();
+            updateMicroUI();
+            viewMacro.classList.add('view-hidden');
+            viewMicro.classList.remove('view-hidden');
+        });
+
+        document.getElementById('btn-back-macro').addEventListener('click', () => {
+            viewMicro.classList.add('view-hidden');
+            viewMacro.classList.remove('view-hidden');
+        });
+
+        function syncMacroToMicro() {
+            // 1. Calculate Total Financial Sector JGB from Macro View
+            const totalJgb = STATE.govt.liability;
+            const nonBankJgb = STATE.private.bonds;
+            const financialSectorJgb = Math.max(0, totalJgb - nonBankJgb);
+
+            // 2. Distribute to BOJ and Private Banks
+            if (financialSectorJgb === 0) {
+                microState.boj.jgb = 0;
+                microState.bank.jgb = 0;
+            } else {
+                const currentMicroTotal = microState.boj.jgb + microState.bank.jgb;
+                if (currentMicroTotal !== financialSectorJgb) {
+                    if (microState.boj.jgb > financialSectorJgb) {
+                        microState.boj.jgb = financialSectorJgb;
+                    }
+                    microState.bank.jgb = financialSectorJgb - microState.boj.jgb;
+                }
+            }
+
+            // 3. Balance Sheets (Simplified)
+            microState.boj.deposit = microState.boj.jgb;
+            microState.bank.deposit = microState.boj.deposit; 
+            
+            // 4. Sync Private Bank Liabilities (Deposits) with Macro Private Assets (Cash)
+            microState.bank.liabilities = Math.max(0, STATE.private.asset - STATE.private.bonds);
+        }
+
+        // =======================================================
+        //  MACRO VIEW LOGIC
+        // =======================================================
         const els = {
             govtLBar: document.getElementById('govt-liability-bar'),
             govtLVal: document.getElementById('govt-liability-val'),
             govtABar: document.getElementById('govt-asset-bar'),
             govtAVal: document.getElementById('govt-asset-val'),
-            
             privLBar: document.getElementById('private-liability-bar'),
             privLVal: document.getElementById('private-liability-val'),
             privABar: document.getElementById('private-asset-bar'),
             privAVal: document.getElementById('private-asset-val'),
             privBBar: document.getElementById('private-bond-bar'),
             privBVal: document.getElementById('private-bond-val'),
-            
             displayGovtNet: document.getElementById('govt-net-display'),
             displayPrivNet: document.getElementById('private-net-display'),
-            displayTotal: document.getElementById('total-economy-display'),
-            
             svg: document.getElementById('flow-lines'),
             bankNode: document.getElementById('bank-node'),
             shockwave: document.getElementById('bank-shockwave'),
@@ -942,29 +926,19 @@
             cardPriv: document.getElementById('card-private'),
         };
 
-        // --- Rendering ---
         function updateUI() {
-            const maxVal = Math.max(
-                STATE.govt.liability, 
-                STATE.govt.asset, 
-                STATE.private.liability, 
-                STATE.private.asset 
-            );
-            
+            const maxVal = Math.max(STATE.govt.liability, STATE.govt.asset, STATE.private.liability, STATE.private.asset);
             const currentScale = Math.max(2000, maxVal);
 
-            // Government
             setBar(els.govtLBar, els.govtLVal, STATE.govt.liability, currentScale);
             setBar(els.govtABar, els.govtAVal, STATE.govt.asset, currentScale);
-            
-            // Private
             setBar(els.privLBar, els.privLVal, STATE.private.liability, currentScale);
             
-            // Private Assets
             const cash = STATE.private.asset - STATE.private.bonds;
             setBar(els.privABar, els.privAVal, cash, currentScale);
             setBar(els.privBBar, els.privBVal, STATE.private.bonds, currentScale);
 
+            // Style tweaks for zero bars
             if (STATE.private.bonds <= 0) {
                 els.privABar.style.borderRadius = "6px 6px 0 0";
             } else {
@@ -972,18 +946,13 @@
                 els.privBBar.style.borderRadius = "6px 6px 0 0";
             }
 
-            // Stats
             const govtNet = STATE.govt.asset - STATE.govt.liability;
             const privNet = STATE.private.asset - STATE.private.liability;
-            const total = STATE.govt.asset + STATE.private.asset;
             
             els.displayGovtNet.textContent = formatMoney(govtNet);
             els.displayGovtNet.style.color = govtNet >= 0 ? 'var(--asset-color)' : 'var(--liability-color)';
-            
             els.displayPrivNet.textContent = formatMoney(privNet);
             els.displayPrivNet.style.color = privNet >= 0 ? 'var(--asset-color)' : 'var(--liability-color)';
-            
-            if(els.displayTotal) els.displayTotal.textContent = formatMoney(total);
         }
 
         function setBar(bar, labelEl, value, scale) {
@@ -992,16 +961,13 @@
             if (labelEl) labelEl.textContent = value > 0 ? value + '兆' : '';
         }
 
-        function formatMoney(val) {
-            return (val > 0 ? '+' : '') + val + '兆';
-        }
+        function formatMoney(val) { return (val > 0 ? '+' : '') + val + '兆'; }
 
-        // --- Animation & Visuals ---
+        // Animation & Visuals
         function triggerCreationEffect() {
             els.bankNode.classList.remove('creation-event');
             void els.bankNode.offsetWidth;
             els.bankNode.classList.add('creation-event');
-
             els.shockwave.classList.remove('animate-shockwave');
             void els.shockwave.offsetWidth;
             els.shockwave.classList.add('animate-shockwave');
@@ -1013,12 +979,10 @@
             popup.textContent = (amount > 0 ? '+' : '') + amount;
             let colorVar = type === 'asset' ? 'var(--asset-color)' : 'var(--liability-color)';
             popup.style.color = colorVar;
-            
             const rect = targetEl.getBoundingClientRect();
-            document.body.appendChild(popup);
+            document.body.appendChild(popup); 
             popup.style.left = (rect.left + rect.width/2) + 'px';
             popup.style.top = (rect.top) + 'px';
-
             setTimeout(() => popup.remove(), 1200);
         }
 
@@ -1032,36 +996,21 @@
             setTimeout(() => el.remove(), 1200);
         }
 
-        // ステータスメッセージ表示用（現状ボタンなどで使用）
         function showStatusMessage(text) {
-            clearStatusMessage();
+            const existing = document.querySelector('.status-message-popup');
+            if (existing) existing.remove();
             const container = document.getElementById('bank-node');
             const el = document.createElement('div');
             el.className = 'status-message-popup';
             el.textContent = text;
             container.appendChild(el);
-
-            // 3秒後に消える処理を追加
-            setTimeout(() => {
-                if (el && el.parentNode) {
-                    el.style.opacity = '0'; // フェードアウト
-                    setTimeout(() => {
-                        if (el && el.parentNode) el.remove(); // DOMから削除
-                    }, 500); // transitionの時間に合わせる
-                }
-            }, 3000);
-        }
-
-        function clearStatusMessage() {
-            const existing = document.querySelector('.status-message-popup');
-            if (existing) existing.remove();
+            setTimeout(() => { if (el && el.parentNode) { el.style.opacity = '0'; setTimeout(() => { if (el && el.parentNode) el.remove(); }, 500); } }, 3000);
         }
 
         function createParticle(startEl, endEl, color) {
             const svgRect = els.svg.getBoundingClientRect();
             const startRect = startEl.getBoundingClientRect();
             const endRect = endEl.getBoundingClientRect();
-
             const x1 = startRect.left + startRect.width / 2 - svgRect.left;
             const y1 = startRect.top + startRect.height / 2 - svgRect.top;
             const x2 = endRect.left + endRect.width / 2 - svgRect.left;
@@ -1072,33 +1021,27 @@
             const cy = (y1 + y2) / 2;
             const d = `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
             
-            path.setAttribute("d", d);
-            path.setAttribute("stroke", color);
-            path.setAttribute("stroke-width", "3");
-            path.setAttribute("fill", "none");
-            path.style.opacity = "0.5";
+            path.setAttribute("d", d); path.setAttribute("stroke", color); path.setAttribute("stroke-width", "3");
+            path.setAttribute("fill", "none"); path.style.opacity = "0.5";
             
             const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            circle.setAttribute("r", "6");
-            circle.setAttribute("fill", color);
+            circle.setAttribute("r", "6"); circle.setAttribute("fill", color);
             
             const animateMotion = document.createElementNS("http://www.w3.org/2000/svg", "animateMotion");
-            animateMotion.setAttribute("dur", "0.5s");
-            animateMotion.setAttribute("repeatCount", "1");
-            animateMotion.setAttribute("path", d);
-            animateMotion.setAttribute("fill", "freeze");
+            animateMotion.setAttribute("dur", "0.5s"); animateMotion.setAttribute("repeatCount", "1");
+            animateMotion.setAttribute("path", d); animateMotion.setAttribute("fill", "freeze");
             
-            circle.appendChild(animateMotion);
-            els.svg.appendChild(path);
-            els.svg.appendChild(circle);
-
-            setTimeout(() => {
-                path.remove();
-                circle.remove();
-            }, 550);
+            circle.appendChild(animateMotion); els.svg.appendChild(path); els.svg.appendChild(circle);
+            setTimeout(() => { path.remove(); circle.remove(); }, 550);
         }
 
-        // --- Actions ---
+        function shake(el) {
+            el.style.transform = "translateX(5px)";
+            setTimeout(() => el.style.transform = "translateX(-5px)", 50);
+            setTimeout(() => el.style.transform = "translateX(5px)", 100);
+            setTimeout(() => el.style.transform = "translateX(0)", 150);
+        }
+
         const actions = {
             borrow: (sector) => {
                 STATE[sector].asset += AMOUNT_STEP;
@@ -1110,13 +1053,7 @@
                 createParticle(els.bankNode, barLiab, 'var(--liability-color)');
                 showPopup(barAsset, AMOUNT_STEP, 'asset');
                 showPopup(barLiab, AMOUNT_STEP, 'liability');
-                
-                if (sector === 'govt') {
-                    showActionName('card-govt', '借入（国債発行）', 'var(--liability-color)');
-                } else {
-                    showActionName('card-private', '借入', 'var(--liability-color)');
-                }
-                
+                showActionName(sector === 'govt' ? 'card-govt' : 'card-private', '借入', 'var(--liability-color)');
                 updateUI();
             },
             repay: (sector) => {
@@ -1124,22 +1061,13 @@
                 if (STATE[sector].liability >= AMOUNT_STEP && currentMoney >= AMOUNT_STEP) {
                     STATE[sector].asset -= AMOUNT_STEP;
                     STATE[sector].liability -= AMOUNT_STEP;
-                    
                     const barAsset = sector === 'govt' ? els.govtABar : els.privABar;
                     const barLiab = sector === 'govt' ? els.govtLBar : els.privLBar;
-
                     createParticle(barAsset, els.bankNode, 'var(--asset-color)'); 
                     createParticle(barLiab, els.bankNode, 'var(--liability-color)'); 
-                    
                     showPopup(barAsset, -AMOUNT_STEP, 'asset');
                     showPopup(barLiab, -AMOUNT_STEP, 'liability');
-                    
-                    if (sector === 'govt') {
-                        showActionName('card-govt', '返済', '#f87171');
-                    } else {
-                        showActionName('card-private', '返済', '#f87171');
-                    }
-
+                    showActionName(sector === 'govt' ? 'card-govt' : 'card-private', '返済', '#f87171');
                     updateUI();
                 } else {
                     shake(sector === 'govt' ? els.cardGovt : els.cardPriv);
@@ -1152,9 +1080,7 @@
                     createParticle(els.govtABar, els.privABar, 'var(--govt-color)');
                     showPopup(els.govtABar, -AMOUNT_STEP, 'asset');
                     showPopup(els.privABar, AMOUNT_STEP, 'asset');
-                    
                     showActionName('card-govt', '支出', 'var(--govt-color)');
-                    
                     updateUI();
                 } else {
                     shake(els.cardGovt);
@@ -1168,9 +1094,7 @@
                     createParticle(els.privABar, els.govtABar, 'var(--private-color)');
                     showPopup(els.privABar, -AMOUNT_STEP, 'asset');
                     showPopup(els.govtABar, AMOUNT_STEP, 'asset');
-                    
                     showActionName('card-private', '納税', 'var(--private-color)');
-                    
                     updateUI();
                 } else {
                     shake(els.cardPriv);
@@ -1185,9 +1109,7 @@
                     createParticle(els.privABar, els.govtABar, 'var(--private-color)');
                     showPopup(els.govtABar, AMOUNT_STEP, 'asset');
                     showPopup(els.govtLBar, AMOUNT_STEP, 'liability');
-                    
                     showActionName('card-private', '国債購入', '#3b82f6');
-                    
                     updateUI();
                 } else {
                     shake(els.cardPriv);
@@ -1201,9 +1123,7 @@
                     createParticle(els.govtABar, els.privABar, 'var(--govt-color)');
                     showPopup(els.govtLBar, -AMOUNT_STEP, 'liability');
                     showPopup(els.govtABar, -AMOUNT_STEP, 'asset');
-                    
                     showActionName('card-private', '国債売却', '#06b6d4');
-                    
                     updateUI();
                 } else {
                     shake(els.cardGovt);
@@ -1211,14 +1131,6 @@
             }
         };
 
-        function shake(el) {
-            el.style.transform = "translateX(5px)";
-            setTimeout(() => el.style.transform = "translateX(-5px)", 50);
-            setTimeout(() => el.style.transform = "translateX(5px)", 100);
-            setTimeout(() => el.style.transform = "translateX(0)", 150);
-        }
-
-        // ラベル更新用関数
         function updateLabels() {
             if (document.body.classList.contains('money-focus-mode')) {
                 document.getElementById('label-private-asset').innerHTML = '資産<br>(貨幣)';
@@ -1240,9 +1152,17 @@
             document.body.classList.remove('debt-focus-mode');
             document.body.classList.remove('money-focus-mode');
             updateLabels();
-            clearStatusMessage();
+            const popup = document.querySelector('.status-message-popup');
+            if(popup) popup.remove();
+            
+            // Set everything to 0 as requested
             STATE.govt = { asset: 0, liability: 0 };
             STATE.private = { asset: 0, liability: 0, bonds: 0 };
+            
+            // Reset Micro state buffer as well
+            microState = { boj: { jgb: 0, deposit: 0 }, bank: { jgb: 0, deposit: 0, liabilities: 0 } };
+            updateInterestRate(0); // Reset Rate
+
             els.bankNode.style.transform = "scale(1.2)";
             setTimeout(() => els.bankNode.style.transform = "scale(1)", 300);
             updateUI();
@@ -1252,8 +1172,16 @@
              document.body.classList.remove('debt-focus-mode');
              document.body.classList.remove('money-focus-mode');
              updateLabels();
-             STATE.govt = { asset: 0, liability: 1300 }; // 1200 -> 1300
-             STATE.private = { asset: 1900, liability: 600, bonds: 400 }; // asset 1800 -> 1900 (Money 1500 + Bonds 400)
+             
+             // Sync: Total 1300 (Bank 400 + BOJ 900)
+             STATE.govt = { asset: 0, liability: 1300 }; 
+             STATE.private = { asset: 1900, liability: 600, bonds: 400 }; // 400 is non-bank
+             
+             // Implicitly: Financial Sector JGB = 1300 - 400 = 900.
+             // We'll set a hint for Micro logic here
+             microState = { boj: { jgb: 500, deposit: 500 }, bank: { jgb: 400, deposit: 500, liabilities: 1500 } };
+             updateInterestRate(-30); // Simulate low rate
+
              updateUI();
              showStatusMessage('現在の日本の貨幣状況');
         };
@@ -1270,15 +1198,167 @@
             updateLabels();
         };
         
-        // 民間部門タイトルクリックで世代情報表示
         document.getElementById('private-sector-title').onclick = () => {
             document.getElementById('private-generation-info').classList.toggle('visible');
         };
-        
-        els.bankNode.onclick = document.getElementById('reset-btn').onclick;
 
-        updateUI();
+        // =======================================================
+        //  MICRO VIEW LOGIC (Monetary Policy)
+        // =======================================================
+        const miEls = {
+            bojJgb: document.getElementById('boj-jgb'), bojDep: document.getElementById('boj-deposit'),
+            bankJgb: document.getElementById('bank-jgb'), bankDep: document.getElementById('bank-deposit'),
+            bankLiab: document.getElementById('bank-liab'), // Added for syncing liability
+            totalMoney: document.getElementById('total-money'),
+            marketTotal: document.getElementById('market-jgb-total')
+        };
+
+        function updateMicroUI() {
+            // Determine dynamic max based on the highest value in either bank to unify scale
+            const bojMax = Math.max(microState.boj.jgb, microState.boj.deposit);
+            const bankAssetTotal = microState.bank.jgb + microState.bank.deposit; // 積み上げ合計
+            const bankLiabVal = microState.bank.liabilities; // 負債の値
+            
+            // 両方の銀行の中で最も背が高いバーに合わせてスケールを決定 (負債も含める)
+            const maxVal = Math.max(bojMax, bankAssetTotal, bankLiabVal);
+            
+            // Ensure minimum scale of 800 for visual stability
+            const currentScale = Math.max(800, maxVal);
+
+            setMicroBar(miEls.bojJgb, microState.boj.jgb, currentScale);
+            setMicroBar(miEls.bojDep, microState.boj.deposit, currentScale);
+            setMicroBar(miEls.bankDep, microState.bank.deposit, currentScale);
+            setMicroBar(miEls.bankJgb, microState.bank.jgb, currentScale);
+            setMicroBar(miEls.bankLiab, microState.bank.liabilities, currentScale); // Update liabilities
+
+            miEls.bojJgb.innerHTML = `国債<br>${microState.boj.jgb}兆`;
+            miEls.bojDep.innerHTML = `日銀当座預金<br>${microState.boj.deposit}兆`;
+            miEls.bankDep.innerHTML = `日銀当座預金<br>${microState.bank.deposit}兆`;
+            miEls.bankJgb.innerHTML = `国債<br>${microState.bank.jgb}兆`;
+            miEls.bankLiab.innerHTML = `民間預金など<br>${microState.bank.liabilities}兆`;
+
+            miEls.totalMoney.textContent = microState.boj.deposit;
+            
+            // Changed from total government debt to sum of financial sector holdings
+            miEls.marketTotal.textContent = microState.boj.jgb + microState.bank.jgb; 
+        }
+
+        function setMicroBar(el, val, scale) {
+            const h = (val / scale) * 100;
+            el.style.height = `${h}%`;
+            el.setAttribute('data-val', val);
+            if(val <= 0) {
+                el.style.opacity = '0'; el.style.minHeight = '0'; el.style.border = 'none';
+            } else {
+                el.style.opacity = '1'; el.style.minHeight = ''; el.style.border = '';
+            }
+        }
+
+        function showMicroPopup(target, amount, type) {
+            const el = document.createElement('div');
+            el.className = 'popup-number';
+            el.textContent = (amount>0?'+':'') + amount + '兆';
+            el.style.color = amount > 0 ? (type==='money'?'var(--money-color)':'var(--jgb-color)') : '#94a3b8';
+            const rect = target.getBoundingClientRect();
+            document.getElementById('micro-view').appendChild(el);
+            el.style.left = (rect.left + rect.width/2) + 'px';
+            el.style.top = (rect.top) + 'px';
+            setTimeout(() => el.remove(), 1000);
+        }
+
+        function flashEl(el) {
+            el.classList.remove('flash');
+            void el.offsetWidth;
+            el.classList.add('flash');
+        }
+
+        function showMicroAction(text, color) {
+            const el = document.createElement('div');
+            el.className = 'action-popup';
+            el.innerHTML = text; // Changed to innerHTML to support <br>
+            el.style.color = color;
+            el.style.borderColor = color;
+            el.style.textAlign = 'center'; // Center align text
+            document.getElementById('micro-view').appendChild(el);
+            setTimeout(() => el.remove(), 1200);
+        }
+
+        // --- Interest Rate Logic ---
+        function updateInterestRate(deltaOrValue) {
+            // If delta is small (like 15 or -15), treat as delta. If 0, reset.
+            if (deltaOrValue === 0) {
+                interestRateAngle = 0;
+            } else {
+                interestRateAngle += deltaOrValue;
+            }
+            
+            // Limit
+            if (interestRateAngle < -45) interestRateAngle = -45;
+            if (interestRateAngle > 45) interestRateAngle = 45;
+
+            // Use CSS style transform for smooth, origin-correct rotation
+            document.getElementById('gauge-needle').style.transform = `rotate(${interestRateAngle}deg)`;
+        }
+
+        // Micro Actions
+        document.getElementById('btn-buy-op').onclick = () => {
+            if (microState.bank.jgb < MICRO_CONFIG.step) return; 
+            const amt = MICRO_CONFIG.step;
+            
+            showMicroAction('買いオペ実行<br><span style="font-size:0.7em">政策金利低下↓</span>', 'var(--money-color)');
+            showMicroPopup(miEls.bankJgb, -amt, 'jgb');
+            updateInterestRate(-15); // Decrease Rate (Left)
+
+            microState.boj.jgb += amt; microState.boj.deposit += amt;
+            microState.bank.jgb -= amt; microState.bank.deposit += amt;
+            updateMicroUI();
+
+            flashEl(miEls.bankDep); showMicroPopup(miEls.bankDep, amt, 'money');
+            flashEl(miEls.bojDep); showMicroPopup(miEls.bojDep, amt, 'money');
+            flashEl(miEls.bojJgb); showMicroPopup(miEls.bojJgb, amt, 'jgb');
+        };
+
+        document.getElementById('btn-sell-op').onclick = () => {
+            if (microState.boj.jgb < MICRO_CONFIG.step || microState.bank.deposit < MICRO_CONFIG.step) return;
+            const amt = MICRO_CONFIG.step;
+            
+            showMicroAction('売りオペ実行<br><span style="font-size:0.7em">政策金利上昇↑</span>', 'var(--jgb-color)');
+            showMicroPopup(miEls.bankDep, -amt, 'money');
+            showMicroPopup(miEls.bojDep, -amt, 'money');
+            showMicroPopup(miEls.bojJgb, -amt, 'jgb');
+            updateInterestRate(15); // Increase Rate (Right)
+
+            microState.boj.jgb -= amt; microState.boj.deposit -= amt;
+            microState.bank.jgb += amt; microState.bank.deposit -= amt;
+            updateMicroUI();
+
+            flashEl(miEls.bankJgb); showMicroPopup(miEls.bankJgb, amt, 'jgb');
+        };
+
+        document.getElementById('btn-micro-reset').onclick = () => {
+            // Set everything to 0 as requested
+            microState = JSON.parse(JSON.stringify(MICRO_INITIAL));
+            updateInterestRate(0); // Reset needle
+            updateMicroUI();
+        };
+
+        // Init
+        // Initial Sync for starting values
+        syncMacroToMicro();
+        // Force clean start with zeros
+        microState = JSON.parse(JSON.stringify(MICRO_INITIAL));
         
+        updateUI();
+        updateMicroUI();
+
+        // Canvas Resize Logic
+        function adjustAppHeight() {
+            const vh = window.innerHeight;
+            document.documentElement.style.setProperty('--app-height', `${vh}px`);
+        }
+        window.addEventListener('resize', adjustAppHeight);
+        adjustAppHeight();
+
     </script>
 </body>
 </html>
