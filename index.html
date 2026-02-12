@@ -51,10 +51,9 @@
             height: var(--app-height);
             width: 100vw;
             overflow: hidden;
-            position: relative; /* For view switching */
+            position: relative;
         }
 
-        /* --- View Containers for Switching --- */
         .view-container {
             position: absolute;
             top: 0;
@@ -371,7 +370,7 @@
             pointer-events: none; z-index: 5;
         }
 
-        /* --- Focus Modes (Original) --- */
+        /* Focus Modes */
         body.debt-focus-mode { background-color: #222; }
         body.debt-focus-mode .canvas-container { overflow: visible !important; z-index: 3000; }
         body.debt-focus-mode .sector-private,
@@ -415,7 +414,6 @@
         body.money-focus-mode #label-private-asset { opacity: 1 !important; font-size: 1.8rem; color: #10b981; font-weight: 900; background: transparent; text-shadow: 0 0 10px rgba(0,0,0,1); transform: translateY(60px) scale(1.3); z-index: 3003; position: relative; white-space: nowrap; }
         body.money-focus-mode .btn-money { box-shadow: 0 0 15px #10b981; transform: scale(1.1); }
 
-        /* Media Queries (Original) */
         @media (min-width: 769px) {
             #macro-view .economy-grid { display: grid; grid-template-columns: 1fr 120px 1fr; gap: 40px; max-width: 1000px; margin: 0 auto; height: 100%; max-height: 500px; }
             .center-column { height: auto; margin: 0; }
@@ -445,10 +443,9 @@
         /* =========================================
            MICRO VIEW STYLES (Monetary Policy)
            ========================================= */
-        /* Common layout wrapper for alignment */
         .micro-layout-row {
             width: 100%;
-            max-width: 840px; /* Aligned with Cards (400*2 + 40 gap) */
+            max-width: 840px; 
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
@@ -457,7 +454,6 @@
 
         #micro-view .header {
             background: rgba(255, 255, 255, 0.95);
-            /* Padding adjustment: Unified 20px left/right to match cards container */
             padding: 12px 20px; 
             display: flex; justify-content: center; 
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -472,7 +468,6 @@
 
         .micro-stats { display: flex; gap: 10px; align-items: center;}
         
-        /* Stats Box Design */
         .m-stat-box {
             background: #fff; padding: 4px 10px; border-radius: 12px; border: 1px solid #e2e8f0;
             display: flex; flex-direction: column; align-items: flex-end; min-width: 80px;
@@ -483,7 +478,6 @@
         .val-j { color: var(--jgb-color); }
         .val-t { color: #64748b; }
 
-        /* Gauge Design */
         .gauge-container { width: 60px; height: 36px; overflow: hidden; position: relative; margin-bottom: -2px;}
         .gauge-svg { width: 100%; height: 100%; }
         #gauge-needle { 
@@ -494,15 +488,13 @@
 
         #micro-view .main-container {
             flex: 1; display: flex; flex-direction: column; justify-content: center; 
-            /* Added padding 20px to align with header/footer */
             padding: 20px; 
             gap: 20px; position: relative; overflow-y: auto;
         }
 
-        /* Wrapper for cards to handle gap and alignment */
         .micro-card-container {
             display: flex; gap: 40px; justify-content: space-between; width: 100%;
-            height: 500px; /* Explicit height to prevent collapse */
+            height: 500px; /* 重要：グラフが潰れないよう高さを固定 */
         }
 
         .micro-card {
@@ -521,11 +513,11 @@
         .mc-title h2 { font-size: 1rem; font-weight: 700; }
         .mc-title p { font-size: 0.7rem; color: var(--text-sub); }
 
-        .mc-body { flex: 1; padding: 16px; display: flex; gap: 8px; }
+        .mc-body { flex: 1; padding: 16px; display: flex; gap: 8px; min-height: 0; }
         .mc-col { flex: 1; display: flex; flex-direction: column; background: #f8fafc; border-radius: 8px; position: relative; overflow: visible; }
         .mc-col-hdr { text-align: center; font-size: 0.75rem; color: var(--text-sub); padding: 6px; font-weight: 700; border-bottom: 1px solid #e2e8f0; background: rgba(255,255,255,0.5); }
         
-        .stack-box { flex: 1; display: flex; flex-direction: column-reverse; justify-content: flex-start; padding: 4px; gap: 2px; position: relative; }
+        .stack-box { flex: 1; display: flex; flex-direction: column-reverse; justify-content: flex-start; padding: 4px; gap: 2px; position: relative; min-height: 0; }
         
         .block {
             width: 100%; border-radius: 4px; display: flex; align-items: center; justify-content: center;
@@ -544,7 +536,6 @@
         }
 
         #micro-view .control-panel {
-            /* Padding adjustment: Unified 20px left/right to match cards container */
             background: white; padding: 12px 20px; box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
             display: flex; justify-content: center; align-items: center; z-index: 50; flex-shrink: 0;
         }
@@ -583,7 +574,6 @@
             .mc-col { flex-direction: column-reverse; }
             .stack-box { flex-direction: column-reverse; align-items: stretch; }
             .block { width: 100% !important; height: auto !important; writing-mode: horizontal-tb; font-size: 0.8rem; }
-            /* Mobile adjustment for header */
             #micro-view .header .micro-layout-row { flex-direction: row; flex-wrap: wrap; justify-content: center; }
             #micro-view .control-panel .micro-layout-row { flex-direction: row; }
         }
@@ -738,13 +728,11 @@
     <div id="micro-view" class="view-container view-hidden">
         <header class="header">
             <div class="micro-layout-row">
-                <!-- Left aligned group -->
                 <div style="display: flex; gap:10px; align-items: center; justify-content: flex-start; flex: 1;">
                     <button class="back-btn" id="btn-back-macro">⬅ 全体図へ戻る</button>
                     <div style="font-weight: 800; white-space: nowrap;">金融調節</div>
                 </div>
                 
-                <!-- Right aligned stats -->
                 <div class="micro-stats">
                     <div class="m-stat-box" style="align-items: center; min-width: 80px;">
                         <div class="gauge-container">
@@ -763,7 +751,7 @@
                     </div>
                     <div class="m-stat-box">
                         <span class="m-stat-lbl">銀行内国債総残高</span>
-                        <span class="m-stat-val val-t"><span id="market-jgb-total">500</span>兆</span>
+                        <span class="m-stat-val val-t"><span id="market-jgb-total">0</span>兆</span>
                     </div>
                 </div>
             </div>
@@ -772,7 +760,6 @@
         <div class="main-container">
             <div class="micro-layout-row">
                 <div class="micro-card-container">
-                    <!-- BOJ Card -->
                     <div class="micro-card card-boj">
                         <div class="mc-header">
                             <div class="mc-icon icon-boj">🏛️</div>
@@ -784,20 +771,19 @@
                         <div class="mc-body">
                             <div class="mc-col">
                                 <div class="stack-box">
-                                    <div class="block blk-jgb" id="boj-jgb" style="height: 50%;">国債</div>
+                                    <div class="block blk-jgb" id="boj-jgb" style="height: 0%;">国債</div>
                                 </div>
                                 <div class="mc-col-hdr">資産</div>
                             </div>
                             <div class="mc-col">
                                 <div class="stack-box">
-                                    <div class="block blk-money" id="boj-deposit" style="height: 50%;">日銀当座預金</div>
+                                    <div class="block blk-money" id="boj-deposit" style="height: 0%;">日銀当座預金</div>
                                 </div>
                                 <div class="mc-col-hdr">負債</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Private Bank Card -->
                     <div class="micro-card card-bank">
                         <div class="mc-header">
                             <div class="mc-icon icon-bank">🏢</div>
@@ -809,14 +795,14 @@
                         <div class="mc-body">
                             <div class="mc-col">
                                 <div class="stack-box">
-                                    <div class="block blk-jgb" id="bank-jgb" style="height: 30%;">国債</div>
-                                    <div class="block blk-money" id="bank-deposit" style="height: 20%;">日銀当座預金</div>
+                                    <div class="block blk-jgb" id="bank-jgb" style="height: 0%;">国債</div>
+                                    <div class="block blk-money" id="bank-deposit" style="height: 0%;">日銀当座預金</div>
                                 </div>
                                 <div class="mc-col-hdr">資産</div>
                             </div>
                             <div class="mc-col">
                                 <div class="stack-box">
-                                    <div class="block blk-liab" id="bank-liab" style="height: 100%;">民間預金など</div>
+                                    <div class="block blk-liab" id="bank-liab" style="height: 0%;">民間預金など</div>
                                 </div>
                                 <div class="mc-col-hdr">負債</div>
                             </div>
@@ -827,13 +813,10 @@
         </div>
 
         <div class="control-panel">
-            <div class="micro-layout-row">
+            <div class="micro-layout-row" style="justify-content: flex-start;">
                 <div style="display: flex;">
                     <button class="op-btn btn-buy-op" id="btn-buy-op"><span>📈 買いオペ</span></button>
                     <button class="op-btn btn-sell-op" id="btn-sell-op"><span>📉 売りオペ</span></button>
-                </div>
-                <div>
-                    <button class="btn-reset" id="btn-micro-reset" style="background:var(--text-sub)">リセット</button>
                 </div>
             </div>
         </div>
@@ -847,22 +830,17 @@
         // =======================================================
         //  STATE DEFINITIONS
         // =======================================================
-        
-        // MACRO STATE
         const STATE = {
             govt: { asset: 0, liability: 0 }, 
             private: { asset: 0, liability: 0, bonds: 0 } 
         };
         const AMOUNT_STEP = 100;
 
-        // MICRO STATE
         const MICRO_CONFIG = { step: 100, max: 800 };
-        // Initial defaults
         const MICRO_INITIAL = { boj: { jgb: 0, deposit: 0 }, bank: { jgb: 0, deposit: 0, liabilities: 0 } };
         let microState = JSON.parse(JSON.stringify(MICRO_INITIAL));
-        let interestRateAngle = 0; // Gauge angle
+        let interestRateAngle = 0; 
 
-        // Navigation & Sync Logic
         document.getElementById('bank-node').addEventListener('click', () => {
             syncMacroToMicro();
             updateMicroUI();
@@ -876,12 +854,10 @@
         });
 
         function syncMacroToMicro() {
-            // 1. Calculate Total Financial Sector JGB from Macro View
             const totalJgb = STATE.govt.liability;
             const nonBankJgb = STATE.private.bonds;
             const financialSectorJgb = Math.max(0, totalJgb - nonBankJgb);
 
-            // 2. Distribute to BOJ and Private Banks
             if (financialSectorJgb === 0) {
                 microState.boj.jgb = 0;
                 microState.bank.jgb = 0;
@@ -895,11 +871,8 @@
                 }
             }
 
-            // 3. Balance Sheets (Simplified)
             microState.boj.deposit = microState.boj.jgb;
             microState.bank.deposit = microState.boj.deposit; 
-            
-            // 4. Sync Private Bank Liabilities (Deposits) with Macro Private Assets (Cash)
             microState.bank.liabilities = Math.max(0, STATE.private.asset - STATE.private.bonds);
         }
 
@@ -938,7 +911,6 @@
             setBar(els.privABar, els.privAVal, cash, currentScale);
             setBar(els.privBBar, els.privBVal, STATE.private.bonds, currentScale);
 
-            // Style tweaks for zero bars
             if (STATE.private.bonds <= 0) {
                 els.privABar.style.borderRadius = "6px 6px 0 0";
             } else {
@@ -963,7 +935,6 @@
 
         function formatMoney(val) { return (val > 0 ? '+' : '') + val + '兆'; }
 
-        // Animation & Visuals
         function triggerCreationEffect() {
             els.bankNode.classList.remove('creation-event');
             void els.bankNode.offsetWidth;
@@ -1154,15 +1125,10 @@
             updateLabels();
             const popup = document.querySelector('.status-message-popup');
             if(popup) popup.remove();
-            
-            // Set everything to 0 as requested
             STATE.govt = { asset: 0, liability: 0 };
             STATE.private = { asset: 0, liability: 0, bonds: 0 };
-            
-            // Reset Micro state buffer as well
-            microState = { boj: { jgb: 0, deposit: 0 }, bank: { jgb: 0, deposit: 0, liabilities: 0 } };
-            updateInterestRate(0); // Reset Rate
-
+            microState = JSON.parse(JSON.stringify(MICRO_INITIAL));
+            updateInterestRate(0); 
             els.bankNode.style.transform = "scale(1.2)";
             setTimeout(() => els.bankNode.style.transform = "scale(1)", 300);
             updateUI();
@@ -1172,16 +1138,10 @@
              document.body.classList.remove('debt-focus-mode');
              document.body.classList.remove('money-focus-mode');
              updateLabels();
-             
-             // Sync: Total 1300 (Bank 400 + BOJ 900)
              STATE.govt = { asset: 0, liability: 1300 }; 
-             STATE.private = { asset: 1900, liability: 600, bonds: 400 }; // 400 is non-bank
-             
-             // Implicitly: Financial Sector JGB = 1300 - 400 = 900.
-             // We'll set a hint for Micro logic here
+             STATE.private = { asset: 1900, liability: 600, bonds: 400 }; 
              microState = { boj: { jgb: 500, deposit: 500 }, bank: { jgb: 400, deposit: 500, liabilities: 1500 } };
-             updateInterestRate(-30); // Simulate low rate
-
+             updateInterestRate(-30); 
              updateUI();
              showStatusMessage('現在の日本の貨幣状況');
         };
@@ -1208,28 +1168,23 @@
         const miEls = {
             bojJgb: document.getElementById('boj-jgb'), bojDep: document.getElementById('boj-deposit'),
             bankJgb: document.getElementById('bank-jgb'), bankDep: document.getElementById('bank-deposit'),
-            bankLiab: document.getElementById('bank-liab'), // Added for syncing liability
+            bankLiab: document.getElementById('bank-liab'), 
             totalMoney: document.getElementById('total-money'),
             marketTotal: document.getElementById('market-jgb-total')
         };
 
         function updateMicroUI() {
-            // Determine dynamic max based on the highest value in either bank to unify scale
             const bojMax = Math.max(microState.boj.jgb, microState.boj.deposit);
-            const bankAssetTotal = microState.bank.jgb + microState.bank.deposit; // 積み上げ合計
-            const bankLiabVal = microState.bank.liabilities; // 負債の値
-            
-            // 両方の銀行の中で最も背が高いバーに合わせてスケールを決定 (負債も含める)
+            const bankAssetTotal = microState.bank.jgb + microState.bank.deposit; 
+            const bankLiabVal = microState.bank.liabilities; 
             const maxVal = Math.max(bojMax, bankAssetTotal, bankLiabVal);
-            
-            // Ensure minimum scale of 800 for visual stability
             const currentScale = Math.max(800, maxVal);
 
             setMicroBar(miEls.bojJgb, microState.boj.jgb, currentScale);
             setMicroBar(miEls.bojDep, microState.boj.deposit, currentScale);
             setMicroBar(miEls.bankDep, microState.bank.deposit, currentScale);
             setMicroBar(miEls.bankJgb, microState.bank.jgb, currentScale);
-            setMicroBar(miEls.bankLiab, microState.bank.liabilities, currentScale); // Update liabilities
+            setMicroBar(miEls.bankLiab, microState.bank.liabilities, currentScale); 
 
             miEls.bojJgb.innerHTML = `国債<br>${microState.boj.jgb}兆`;
             miEls.bojDep.innerHTML = `日銀当座預金<br>${microState.boj.deposit}兆`;
@@ -1238,8 +1193,6 @@
             miEls.bankLiab.innerHTML = `民間預金など<br>${microState.bank.liabilities}兆`;
 
             miEls.totalMoney.textContent = microState.boj.deposit;
-            
-            // Changed from total government debt to sum of financial sector holdings
             miEls.marketTotal.textContent = microState.boj.jgb + microState.bank.jgb; 
         }
 
@@ -1275,44 +1228,34 @@
         function showMicroAction(text, color) {
             const el = document.createElement('div');
             el.className = 'action-popup';
-            el.innerHTML = text; // Changed to innerHTML to support <br>
+            el.innerHTML = text; 
             el.style.color = color;
             el.style.borderColor = color;
-            el.style.textAlign = 'center'; // Center align text
+            el.style.textAlign = 'center'; 
             document.getElementById('micro-view').appendChild(el);
             setTimeout(() => el.remove(), 1200);
         }
 
-        // --- Interest Rate Logic ---
         function updateInterestRate(deltaOrValue) {
-            // If delta is small (like 15 or -15), treat as delta. If 0, reset.
             if (deltaOrValue === 0) {
                 interestRateAngle = 0;
             } else {
                 interestRateAngle += deltaOrValue;
             }
-            
-            // Limit
             if (interestRateAngle < -45) interestRateAngle = -45;
             if (interestRateAngle > 45) interestRateAngle = 45;
-
-            // Use CSS style transform for smooth, origin-correct rotation
             document.getElementById('gauge-needle').style.transform = `rotate(${interestRateAngle}deg)`;
         }
 
-        // Micro Actions
         document.getElementById('btn-buy-op').onclick = () => {
             if (microState.bank.jgb < MICRO_CONFIG.step) return; 
             const amt = MICRO_CONFIG.step;
-            
             showMicroAction('買いオペ実行<br><span style="font-size:0.7em">政策金利低下↓</span>', 'var(--money-color)');
             showMicroPopup(miEls.bankJgb, -amt, 'jgb');
-            updateInterestRate(-15); // Decrease Rate (Left)
-
+            updateInterestRate(-15); 
             microState.boj.jgb += amt; microState.boj.deposit += amt;
             microState.bank.jgb -= amt; microState.bank.deposit += amt;
             updateMicroUI();
-
             flashEl(miEls.bankDep); showMicroPopup(miEls.bankDep, amt, 'money');
             flashEl(miEls.bojDep); showMicroPopup(miEls.bojDep, amt, 'money');
             flashEl(miEls.bojJgb); showMicroPopup(miEls.bojJgb, amt, 'jgb');
@@ -1321,37 +1264,20 @@
         document.getElementById('btn-sell-op').onclick = () => {
             if (microState.boj.jgb < MICRO_CONFIG.step || microState.bank.deposit < MICRO_CONFIG.step) return;
             const amt = MICRO_CONFIG.step;
-            
             showMicroAction('売りオペ実行<br><span style="font-size:0.7em">政策金利上昇↑</span>', 'var(--jgb-color)');
             showMicroPopup(miEls.bankDep, -amt, 'money');
             showMicroPopup(miEls.bojDep, -amt, 'money');
             showMicroPopup(miEls.bojJgb, -amt, 'jgb');
-            updateInterestRate(15); // Increase Rate (Right)
-
+            updateInterestRate(15); 
             microState.boj.jgb -= amt; microState.boj.deposit -= amt;
             microState.bank.jgb += amt; microState.bank.deposit -= amt;
             updateMicroUI();
-
             flashEl(miEls.bankJgb); showMicroPopup(miEls.bankJgb, amt, 'jgb');
         };
 
-        document.getElementById('btn-micro-reset').onclick = () => {
-            // Set everything to 0 as requested
-            microState = JSON.parse(JSON.stringify(MICRO_INITIAL));
-            updateInterestRate(0); // Reset needle
-            updateMicroUI();
-        };
-
-        // Init
-        // Initial Sync for starting values
-        syncMacroToMicro();
-        // Force clean start with zeros
-        microState = JSON.parse(JSON.stringify(MICRO_INITIAL));
-        
         updateUI();
         updateMicroUI();
 
-        // Canvas Resize Logic
         function adjustAppHeight() {
             const vh = window.innerHeight;
             document.documentElement.style.setProperty('--app-height', `${vh}px`);
