@@ -535,6 +535,7 @@
         .blk-jgb { background: var(--jgb-color); }
         .blk-money { background: var(--money-color); }
         .blk-liab { background: #cbd5e1; color: #64748b; }
+        .blk-govt { background: var(--govt-color); }
         
         #micro-view .control-panel {
             background: white; padding: 12px 20px; box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
@@ -569,19 +570,20 @@
 
         /* NEW: Deposit Message Popup */
         .deposit-message-popup {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.95); padding: 20px; border-radius: 16px;
+            position: absolute; top: 50%; left: 38%; 
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95); padding: 24px; border-radius: 16px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center;
             font-weight: 700; color: var(--text-main); border: 2px solid var(--money-color);
-            z-index: 10000; max-width: 80%; width: 400px; font-size: 1.1rem;
-            opacity: 0; animation: msg-popup 3.5s ease-in-out forwards;
+            z-index: 10000; max-width: 90%; width: 640px; font-size: 1.3rem; line-height: 1.6;
+            opacity: 0; 
+            /* アニメーションを変更：出現してそのまま留まるように設定 */
+            animation: msg-popup-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
             pointer-events: none;
         }
-        @keyframes msg-popup {
+        @keyframes msg-popup-in {
             0% { opacity: 0; transform: translate(-50%, -40%) scale(0.9); }
-            10% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-            90% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-            100% { opacity: 0; transform: translate(-50%, -60%) scale(1); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
         }
 
         /* --- Micro Focus Mode Animation --- */
@@ -797,7 +799,7 @@
                 </div>
                 
                 <div class="micro-stats">
-                    <button class="btn-money" id="btn-deposit-focus" style="margin-right: 12px; font-size: 0.95rem; padding: 12px 24px; border-radius: 12px;">💰 民間預金</button>
+                    <button class="btn-money" id="btn-deposit-focus" style="margin-right: 12px; font-size: 0.95rem; padding: 12px 24px; border-radius: 12px;">💰 民間貨幣</button>
 
                     <div class="m-stat-box" style="align-items: center; min-width: 90px;">
                         <div class="gauge-container">
@@ -853,6 +855,7 @@
                             <div class="mc-col">
                                 <div class="stack-box">
                                     <div class="block blk-money" id="boj-deposit" style="height: 0%;">日銀当座預金</div>
+                                    <div class="block blk-govt" id="boj-govt-deposit" style="height: 0%;">政府預金</div>
                                 </div>
                                 <div class="mc-col-hdr">負債</div>
                             </div>
@@ -867,6 +870,7 @@
                             </div>
                         </div>
                         <div class="mc-body">
+                            <!-- Added missing Assets Column -->
                             <div class="mc-col">
                                 <div class="stack-box">
                                     <div class="block blk-jgb" id="bank-jgb" style="height: 0%;">国債</div>
@@ -876,7 +880,7 @@
                             </div>
                             <div class="mc-col">
                                 <div class="stack-box">
-                                    <div class="block blk-liab" id="bank-liab" style="height: 0%;">民間預金</div>
+                                    <div class="block blk-liab" id="bank-liab" style="height: 0%;">民間貨幣</div>
                                 </div>
                                 <div class="mc-col-hdr">負債</div>
                             </div>
@@ -887,13 +891,14 @@
         </div>
 
         <div class="control-panel">
-            <div class="micro-layout-row" style="justify-content: flex-start;">
-                <div style="display: flex;">
+            <div class="micro-layout-row" style="justify-content: flex-start; overflow: hidden;">
+                <div style="display: flex; flex-shrink: 0;">
                     <button class="op-btn btn-buy-op" id="btn-buy-op"><span>📈 買いオペ (国債買取)</span></button>
                     <button class="op-btn btn-sell-op" id="btn-sell-op"><span>📉 売りオペ (国債売却)</span></button>
                 </div>
-                <div style="margin-left: 20px; font-size: 0.9rem; color: var(--text-sub); flex: 1;">
-                    ※ 買いオペ：銀行から国債を買い取り、代金を日銀当座預金（ベースマネー）で支払います。
+                <div style="margin-left: 12px; font-size: 0.65rem; color: var(--text-sub); flex: 1; line-height: 1.5; white-space: nowrap;">
+                    ※ 買いオペ：銀行から国債を買い取り、代金を日銀当座預金（ベースマネー）で支払います。<br>
+                    ※ 売りオペ：銀行へ国債を売却し、代金を日銀当座預金（ベースマネー）から回収します。
                 </div>
             </div>
         </div>
@@ -911,7 +916,7 @@
         const AMOUNT_STEP = 100;
 
         const MICRO_CONFIG = { step: 100, max: 800 };
-        const MICRO_INITIAL = { boj: { jgb: 0, deposit: 0 }, bank: { jgb: 0, deposit: 0, liabilities: 0 } };
+        const MICRO_INITIAL = { boj: { jgb: 0, deposit: 0, govtDeposit: 0 }, bank: { jgb: 0, deposit: 0, liabilities: 0 } };
         let microState = JSON.parse(JSON.stringify(MICRO_INITIAL));
         let policyRateAngle = 0; 
         let bondYieldAngle = 0;
@@ -944,6 +949,9 @@
             }
 
             microState.boj.deposit = microState.boj.jgb;
+            // Sync Govt Deposit
+            microState.boj.govtDeposit = STATE.govt.asset;
+
             microState.bank.deposit = microState.boj.deposit; 
             microState.bank.liabilities = Math.max(0, STATE.private.asset - STATE.private.bonds);
         }
@@ -1002,7 +1010,7 @@
         function setBar(bar, labelEl, value, scale) {
             let height = (value / scale) * 100;
             bar.style.height = `${height}%`;
-            if (labelEl) labelEl.textContent = value > 0 ? value : '';
+            if (labelEl) labelEl.textContent = value > 0 ? value + '兆' : '';
         }
 
         function formatMoney(val) { return (val > 0 ? '+' : '') + val + '兆円'; }
@@ -1219,48 +1227,68 @@
         // =======================================================
         //  MICRO VIEW LOGIC
         // =======================================================
-        const miEls = {
-            bojJgb: document.getElementById('boj-jgb'), bojDep: document.getElementById('boj-deposit'),
-            bankJgb: document.getElementById('bank-jgb'), bankDep: document.getElementById('bank-deposit'),
-            bankLiab: document.getElementById('bank-liab'), 
-            totalMoney: document.getElementById('total-money'),
-            marketTotal: document.getElementById('market-jgb-total')
+        
+        // Wait for DOM to be fully ready before getting elements to avoid null errors
+        window.onload = function() {
+            const miEls = {
+                bojJgb: document.getElementById('boj-jgb'), bojDep: document.getElementById('boj-deposit'),
+                bojGovt: document.getElementById('boj-govt-deposit'),
+                bankJgb: document.getElementById('bank-jgb'), bankDep: document.getElementById('bank-deposit'),
+                bankLiab: document.getElementById('bank-liab'), 
+                totalMoney: document.getElementById('total-money'),
+                marketTotal: document.getElementById('market-jgb-total')
+            };
+
+            function updateMicroUI() {
+                const bojMax = Math.max(microState.boj.jgb, microState.boj.deposit);
+                const bankAssetTotal = microState.bank.jgb + microState.bank.deposit; 
+                const bankLiabVal = microState.bank.liabilities; 
+                const bojLiabTotal = microState.boj.deposit + (microState.boj.govtDeposit || 0);
+                const maxVal = Math.max(bojMax, bankAssetTotal, bankLiabVal, bojLiabTotal);
+                const currentScale = Math.max(800, maxVal);
+
+                if (miEls.bojJgb) setMicroBar(miEls.bojJgb, microState.boj.jgb, currentScale);
+                if (miEls.bojDep) setMicroBar(miEls.bojDep, microState.boj.deposit, currentScale);
+                if (miEls.bojGovt) setMicroBar(miEls.bojGovt, microState.boj.govtDeposit || 0, currentScale);
+                if (miEls.bankDep) setMicroBar(miEls.bankDep, microState.bank.deposit, currentScale);
+                if (miEls.bankJgb) setMicroBar(miEls.bankJgb, microState.bank.jgb, currentScale);
+                if (miEls.bankLiab) setMicroBar(miEls.bankLiab, microState.bank.liabilities, currentScale); 
+
+                if(miEls.bojJgb) miEls.bojJgb.innerHTML = `国債<br>${microState.boj.jgb}兆`;
+                if(miEls.bojDep) miEls.bojDep.innerHTML = `日銀当預<br>${microState.boj.deposit}兆`;
+                if(miEls.bojGovt) miEls.bojGovt.innerHTML = `政府預金<br>${microState.boj.govtDeposit || 0}兆`;
+                if(miEls.bankDep) miEls.bankDep.innerHTML = `日銀当預<br>${microState.bank.deposit}兆`;
+                if(miEls.bankJgb) miEls.bankJgb.innerHTML = `国債<br>${microState.bank.jgb}兆`;
+                if(miEls.bankLiab) miEls.bankLiab.innerHTML = `民間貨幣<br>${microState.bank.liabilities}兆`;
+
+                if(miEls.totalMoney) miEls.totalMoney.textContent = microState.boj.deposit;
+                if(miEls.marketTotal) miEls.marketTotal.textContent = microState.boj.jgb + microState.bank.jgb; 
+            }
+
+            function setMicroBar(el, val, scale) {
+                if (!el) return; // Safety check
+                const h = (val / scale) * 100;
+                el.style.height = `${h}%`;
+                if(val <= 0) {
+                    el.style.opacity = '0'; el.style.minHeight = '0';
+                } else {
+                    el.style.opacity = '1'; el.style.minHeight = '1px';
+                }
+            }
+
+            // Expose updateMicroUI to global scope so it can be called from event listeners
+            window.updateMicroUI = updateMicroUI;
+            window.miEls = miEls; // Expose elements globally
+            
+            // Initial update
+            updateMicroUI();
         };
 
-        function updateMicroUI() {
-            const bojMax = Math.max(microState.boj.jgb, microState.boj.deposit);
-            const bankAssetTotal = microState.bank.jgb + microState.bank.deposit; 
-            const bankLiabVal = microState.bank.liabilities; 
-            const maxVal = Math.max(bojMax, bankAssetTotal, bankLiabVal);
-            const currentScale = Math.max(800, maxVal);
-
-            setMicroBar(miEls.bojJgb, microState.boj.jgb, currentScale);
-            setMicroBar(miEls.bojDep, microState.boj.deposit, currentScale);
-            setMicroBar(miEls.bankDep, microState.bank.deposit, currentScale);
-            setMicroBar(miEls.bankJgb, microState.bank.jgb, currentScale);
-            setMicroBar(miEls.bankLiab, microState.bank.liabilities, currentScale); 
-
-            miEls.bojJgb.innerHTML = `国債<br>${microState.boj.jgb}兆`;
-            miEls.bojDep.innerHTML = `日銀当預<br>${microState.boj.deposit}兆`;
-            miEls.bankDep.innerHTML = `日銀当預<br>${microState.bank.deposit}兆`;
-            miEls.bankJgb.innerHTML = `国債<br>${microState.bank.jgb}兆`;
-            miEls.bankLiab.innerHTML = `民間預金<br>${microState.bank.liabilities}兆`;
-
-            miEls.totalMoney.textContent = microState.boj.deposit;
-            miEls.marketTotal.textContent = microState.boj.jgb + microState.bank.jgb; 
-        }
-
-        function setMicroBar(el, val, scale) {
-            const h = (val / scale) * 100;
-            el.style.height = `${h}%`;
-            if(val <= 0) {
-                el.style.opacity = '0'; el.style.minHeight = '0';
-            } else {
-                el.style.opacity = '1'; el.style.minHeight = '1px';
-            }
-        }
+        // Redefine functions that use updateMicroUI/miEls to use window scope or wait
+        // Simplified approach: keep logic here but access global window.updateMicroUI inside click handlers
 
         function showMicroPopup(target, amount, type) {
+            if (!target) return;
             const el = document.createElement('div');
             el.className = 'popup-number';
             el.textContent = (amount>0?'+':'') + amount;
@@ -1273,6 +1301,7 @@
         }
 
         function flashEl(el) {
+            if (!el) return;
             el.classList.remove('flash');
             void el.offsetWidth;
             el.classList.add('flash');
@@ -1293,24 +1322,28 @@
                 // Reset Case
                 policyRateAngle = 0;
                 bondYieldAngle = 0;
-                document.getElementById('gauge-needle-bond').style.transform = `rotate(0deg)`;
-                // Slightly delayed reset for visual consistency
+                const bondNeedle = document.getElementById('gauge-needle-bond');
+                if(bondNeedle) bondNeedle.style.transform = `rotate(0deg)`;
+                
                 setTimeout(() => {
-                    document.getElementById('gauge-needle-policy').style.transform = `rotate(0deg)`;
+                    const policyNeedle = document.getElementById('gauge-needle-policy');
+                    if(policyNeedle) policyNeedle.style.transform = `rotate(0deg)`;
                 }, 200);
             } else {
                 // Update Bond Yield (Immediate)
                 bondYieldAngle += deltaOrValue;
                 if (bondYieldAngle < -45) bondYieldAngle = -45;
                 if (bondYieldAngle > 45) bondYieldAngle = 45;
-                document.getElementById('gauge-needle-bond').style.transform = `rotate(${bondYieldAngle}deg)`;
+                const bondNeedle = document.getElementById('gauge-needle-bond');
+                if(bondNeedle) bondNeedle.style.transform = `rotate(${bondYieldAngle}deg)`;
 
                 // Update Policy Rate (Delayed by 200ms)
                 setTimeout(() => {
                     policyRateAngle += deltaOrValue;
                     if (policyRateAngle < -45) policyRateAngle = -45;
                     if (policyRateAngle > 45) policyRateAngle = 45;
-                    document.getElementById('gauge-needle-policy').style.transform = `rotate(${policyRateAngle}deg)`;
+                    const policyNeedle = document.getElementById('gauge-needle-policy');
+                    if(policyNeedle) policyNeedle.style.transform = `rotate(${policyRateAngle}deg)`;
                 }, 200);
             }
         }
@@ -1319,48 +1352,67 @@
             if (microState.bank.jgb < MICRO_CONFIG.step) return; 
             const amt = MICRO_CONFIG.step;
             showMicroAction('買いオペ実行<br><small>金利低下圧力↓</small>', 'var(--money-color)');
-            showMicroPopup(miEls.bankJgb, -amt, 'jgb');
+            
+            // Use window.miEls if defined
+            const els = window.miEls;
+            if(els) showMicroPopup(els.bankJgb, -amt, 'jgb');
             
             // Trigger interest rate updates (Bond first, then Policy)
             updateInterestRate(-15); 
             
             microState.boj.jgb += amt; microState.boj.deposit += amt;
             microState.bank.jgb -= amt; microState.bank.deposit += amt;
-            updateMicroUI();
-            flashEl(miEls.bankDep); showMicroPopup(miEls.bankDep, amt, 'money');
-            flashEl(miEls.bojDep); showMicroPopup(miEls.bojDep, amt, 'money');
+            
+            if(window.updateMicroUI) window.updateMicroUI();
+            
+            if(els) {
+                flashEl(els.bankDep); showMicroPopup(els.bankDep, amt, 'money');
+                flashEl(els.bojDep); showMicroPopup(els.bojDep, amt, 'money');
+            }
         };
 
         document.getElementById('btn-sell-op').onclick = () => {
             if (microState.boj.jgb < MICRO_CONFIG.step || microState.bank.deposit < MICRO_CONFIG.step) return;
             const amt = MICRO_CONFIG.step;
             showMicroAction('売りオペ実行<br><small>金利上昇圧力↑</small>', 'var(--jgb-color)');
-            showMicroPopup(miEls.bankDep, -amt, 'money');
+            
+            const els = window.miEls;
+            if(els) showMicroPopup(els.bankDep, -amt, 'money');
             
             // Trigger interest rate updates (Bond first, then Policy)
             updateInterestRate(15); 
             
             microState.boj.jgb -= amt; microState.boj.deposit -= amt;
             microState.bank.jgb += amt; microState.bank.deposit -= amt;
-            updateMicroUI();
-            flashEl(miEls.bankJgb); showMicroPopup(miEls.bankJgb, amt, 'jgb');
+            
+            if(window.updateMicroUI) window.updateMicroUI();
+            
+            if(els) {
+                flashEl(els.bankJgb); showMicroPopup(els.bankJgb, amt, 'jgb');
+            }
         };
 
         document.getElementById('btn-deposit-focus').onclick = () => {
             const isFocused = document.body.classList.toggle('deposit-focus-mode');
+            const container = document.getElementById('micro-view');
             
+            // 既存のポップアップがあれば削除
+            const existingMsg = container.querySelector('.deposit-message-popup');
+            if (existingMsg) {
+                existingMsg.remove();
+            }
+
             if (isFocused) {
                 const msg = document.createElement('div');
                 msg.className = 'deposit-message-popup';
-                msg.innerHTML = '中央銀行の金融市場調節は、<br>民間預金に直接的な影響を及ぼさない';
-                document.getElementById('micro-view').appendChild(msg);
-                setTimeout(() => msg.remove(), 3500); 
+                msg.innerHTML = '中央銀行の金融市場調節は、<br>国債売買オペレーションにより<br>日銀当座預金(マネタリーベース)を増減させ、<br>国債金利と政策金利を調整する政策手段である。<br><br><span style="color:#ef4444">なのでこの調節は民間非銀行所有貨幣(マネーストック)に<br>直接的な影響を与えるものではない。</span>';
+                container.appendChild(msg);
+                // setTimeoutによる自動削除は行わない
             }
         };
 
-        // Initialize
+        // Initialize Macro UI immediately
         updateUI();
-        updateMicroUI();
 
         window.addEventListener('resize', () => {
             document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
