@@ -35,6 +35,7 @@
             --micro-bank-bg: #eff6ff;
             --jgb-color: #3b82f6;
             --money-color: #10b981;
+            --loan-color: #d97706; /* 貸出金の色 */
         }
 
         * {
@@ -536,6 +537,8 @@
         .blk-money { background: var(--money-color); }
         .blk-liab { background: #cbd5e1; color: #64748b; }
         .blk-govt { background: var(--govt-color); }
+        /* 貸出金の色を負債の民間貨幣と同じ色に変更 */
+        .blk-loan { background: #cbd5e1; color: #64748b; }
         
         #micro-view .control-panel {
             background: white; padding: 12px 20px; box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
@@ -575,7 +578,8 @@
             background: rgba(255, 255, 255, 0.95); padding: 24px; border-radius: 16px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center;
             font-weight: 700; color: var(--text-main); border: 2px solid var(--money-color);
-            z-index: 10000; max-width: 90%; width: 640px; font-size: 1.3rem; line-height: 1.6;
+            /* 幅を640pxから720pxに拡大 */
+            z-index: 10000; max-width: 90%; width: 720px; font-size: 1.3rem; line-height: 1.6;
             opacity: 0; 
             /* アニメーションを変更：出現してそのまま留まるように設定 */
             animation: msg-popup-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
@@ -688,7 +692,7 @@
                                     <span class="bs-bar-content" id="govt-asset-val">0</span>
                                 </div>
                             </div>
-                            <div class="bs-label" id="label-govt-asset">資産<br>(政府預金)</div>
+                            <div class="bs-label" id="label-govt-asset">資産</div>
                         </div>
                         <div class="bs-column">
                             <div class="chart-container">
@@ -696,7 +700,7 @@
                                     <span class="bs-bar-content" id="govt-liability-val">0</span>
                                 </div>
                             </div>
-                            <div class="bs-label" id="label-govt-liability">負債<br>(国債)</div>
+                            <div class="bs-label" id="label-govt-liability">負債</div>
                         </div>
                     </div>
                 </div>
@@ -726,7 +730,7 @@
                                     </span>
                                 </div>
                             </div>
-                            <div class="bs-label" id="label-private-asset">資産<br>(貨幣+国債)</div>
+                            <div class="bs-label" id="label-private-asset">資産</div>
                         </div>
                         <div class="bs-column">
                             <div class="chart-container">
@@ -734,7 +738,7 @@
                                     <span class="bs-bar-content" id="private-liability-val">0</span>
                                 </div>
                             </div>
-                            <div class="bs-label" id="label-private-liability">負債<br>(借入金)</div>
+                            <div class="bs-label" id="label-private-liability">負債</div>
                         </div>
                     </div>
                 </div>
@@ -873,8 +877,9 @@
                             <!-- Added missing Assets Column -->
                             <div class="mc-col">
                                 <div class="stack-box">
-                                    <div class="block blk-jgb" id="bank-jgb" style="height: 0%;">国債</div>
                                     <div class="block blk-money" id="bank-deposit" style="height: 0%;">日銀当座預金</div>
+                                    <div class="block blk-jgb" id="bank-jgb" style="height: 0%;">国債</div>
+                                    <div class="block blk-loan" id="bank-loan" style="height: 0%;">貸出金</div>
                                 </div>
                                 <div class="mc-col-hdr">資産</div>
                             </div>
@@ -916,7 +921,7 @@
         const AMOUNT_STEP = 100;
 
         const MICRO_CONFIG = { step: 100, max: 800 };
-        const MICRO_INITIAL = { boj: { jgb: 0, deposit: 0, govtDeposit: 0 }, bank: { jgb: 0, deposit: 0, liabilities: 0 } };
+        const MICRO_INITIAL = { boj: { jgb: 0, deposit: 0, govtDeposit: 0 }, bank: { jgb: 0, deposit: 0, liabilities: 0, loans: 0 } };
         let microState = JSON.parse(JSON.stringify(MICRO_INITIAL));
         let policyRateAngle = 0; 
         let bondYieldAngle = 0;
@@ -954,6 +959,9 @@
 
             microState.bank.deposit = microState.boj.deposit; 
             microState.bank.liabilities = Math.max(0, STATE.private.asset - STATE.private.bonds);
+            
+            // Sync Private Loans
+            microState.bank.loans = STATE.private.liability;
         }
 
         // =======================================================
@@ -983,13 +991,13 @@
             const maxVal = Math.max(STATE.govt.liability, STATE.govt.asset, STATE.private.liability, STATE.private.asset);
             const currentScale = Math.max(2000, maxVal);
 
-            setBar(els.govtLBar, els.govtLVal, STATE.govt.liability, currentScale);
-            setBar(els.govtABar, els.govtAVal, STATE.govt.asset, currentScale);
-            setBar(els.privLBar, els.privLVal, STATE.private.liability, currentScale);
+            setBarContent(els.govtLBar, STATE.govt.liability, currentScale, '国債');
+            setBarContent(els.govtABar, STATE.govt.asset, currentScale, '政府預金');
+            setBarContent(els.privLBar, STATE.private.liability, currentScale, '借入金');
             
             const cash = STATE.private.asset - STATE.private.bonds;
-            setBar(els.privABar, els.privAVal, cash, currentScale);
-            setBar(els.privBBar, els.privBVal, STATE.private.bonds, currentScale);
+            setBarContent(els.privABar, cash, currentScale, '貨幣');
+            setBarContent(els.privBBar, STATE.private.bonds, currentScale, '国債');
 
             if (STATE.private.bonds <= 0) {
                 els.privABar.style.borderRadius = "6px 6px 0 0";
@@ -1007,10 +1015,19 @@
             els.displayPrivNet.style.color = privNet >= 0 ? 'var(--asset-color)' : 'var(--liability-color)';
         }
 
-        function setBar(bar, labelEl, value, scale) {
+        function setBarContent(bar, value, scale, label) {
             let height = (value / scale) * 100;
             bar.style.height = `${height}%`;
-            if (labelEl) labelEl.textContent = value > 0 ? value + '兆' : '';
+            
+            // バーの中身を更新
+            if (value > 0) {
+                bar.innerHTML = `<div style="text-align:center; line-height:1.2;">${label}<br><span style="font-size:1.1em; font-weight:900;">${value}兆</span></div>`;
+                bar.style.opacity = '1';
+                bar.style.border = ''; 
+            } else {
+                bar.innerHTML = '';
+                bar.style.opacity = '0';
+            }
         }
 
         function formatMoney(val) { return (val > 0 ? '+' : '') + val + '兆円'; }
@@ -1235,13 +1252,14 @@
                 bojGovt: document.getElementById('boj-govt-deposit'),
                 bankJgb: document.getElementById('bank-jgb'), bankDep: document.getElementById('bank-deposit'),
                 bankLiab: document.getElementById('bank-liab'), 
+                bankLoan: document.getElementById('bank-loan'),
                 totalMoney: document.getElementById('total-money'),
                 marketTotal: document.getElementById('market-jgb-total')
             };
 
             function updateMicroUI() {
                 const bojMax = Math.max(microState.boj.jgb, microState.boj.deposit);
-                const bankAssetTotal = microState.bank.jgb + microState.bank.deposit; 
+                const bankAssetTotal = microState.bank.jgb + microState.bank.deposit + (microState.bank.loans || 0); 
                 const bankLiabVal = microState.bank.liabilities; 
                 const bojLiabTotal = microState.boj.deposit + (microState.boj.govtDeposit || 0);
                 const maxVal = Math.max(bojMax, bankAssetTotal, bankLiabVal, bojLiabTotal);
@@ -1252,6 +1270,7 @@
                 if (miEls.bojGovt) setMicroBar(miEls.bojGovt, microState.boj.govtDeposit || 0, currentScale);
                 if (miEls.bankDep) setMicroBar(miEls.bankDep, microState.bank.deposit, currentScale);
                 if (miEls.bankJgb) setMicroBar(miEls.bankJgb, microState.bank.jgb, currentScale);
+                if (miEls.bankLoan) setMicroBar(miEls.bankLoan, microState.bank.loans || 0, currentScale);
                 if (miEls.bankLiab) setMicroBar(miEls.bankLiab, microState.bank.liabilities, currentScale); 
 
                 if(miEls.bojJgb) miEls.bojJgb.innerHTML = `国債<br>${microState.boj.jgb}兆`;
@@ -1259,6 +1278,7 @@
                 if(miEls.bojGovt) miEls.bojGovt.innerHTML = `政府預金<br>${microState.boj.govtDeposit || 0}兆`;
                 if(miEls.bankDep) miEls.bankDep.innerHTML = `日銀当預<br>${microState.bank.deposit}兆`;
                 if(miEls.bankJgb) miEls.bankJgb.innerHTML = `国債<br>${microState.bank.jgb}兆`;
+                if(miEls.bankLoan) miEls.bankLoan.innerHTML = `貸出金<br>${microState.bank.loans || 0}兆`;
                 if(miEls.bankLiab) miEls.bankLiab.innerHTML = `民間貨幣<br>${microState.bank.liabilities}兆`;
 
                 if(miEls.totalMoney) miEls.totalMoney.textContent = microState.boj.deposit;
@@ -1405,7 +1425,8 @@
             if (isFocused) {
                 const msg = document.createElement('div');
                 msg.className = 'deposit-message-popup';
-                msg.innerHTML = '中央銀行の金融市場調節は、<br>国債売買オペレーションにより<br>日銀当座預金(マネタリーベース)を増減させ、<br>国債金利と政策金利を調整する政策手段である。<br><br><span style="color:#ef4444">なのでこの調節は民間非銀行所有貨幣(マネーストック)に<br>直接的な影響を与えるものではない。</span>';
+                // 文言を「民間非銀行が所有する貨幣」に変更
+                msg.innerHTML = '中央銀行の金融市場調節は、<br>国債売買オペレーションにより<br>日銀当座預金(マネタリーベース)を増減させ、<br>国債金利と政策金利を調整する政策手段である。<br><br><span style="color:#ef4444">なのでこの調節は民間非銀行が所有する貨幣(マネーストック)に<br>直接的な影響を与えるものではない。</span>';
                 container.appendChild(msg);
                 // setTimeoutによる自動削除は行わない
             }
