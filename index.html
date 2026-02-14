@@ -1123,7 +1123,8 @@
                 createParticle(els.bankNode, barLiab, 'var(--liability-color)');
                 showPopup(barAsset, AMOUNT_STEP, 'asset');
                 showPopup(barLiab, AMOUNT_STEP, 'liability');
-                showActionName(sector === 'govt' ? 'card-govt' : 'card-private', '信用創造', 'var(--liability-color)');
+                const actionText = sector === 'govt' ? '国債発行' : '信用創造';
+                showActionName(sector === 'govt' ? 'card-govt' : 'card-private', actionText, 'var(--liability-color)');
                 updateUI();
             },
             repay: (sector) => {
@@ -1137,7 +1138,8 @@
                     createParticle(barLiab, els.bankNode, 'var(--liability-color)'); 
                     showPopup(barAsset, -AMOUNT_STEP, 'asset');
                     showPopup(barLiab, -AMOUNT_STEP, 'liability');
-                    showActionName(sector === 'govt' ? 'card-govt' : 'card-private', '貨幣消滅', '#f87171');
+                    const actionText = sector === 'govt' ? '国債償還' : '貨幣消滅';
+                    showActionName(sector === 'govt' ? 'card-govt' : 'card-private', actionText, '#f87171');
                     updateUI();
                 } else {
                     shake(sector === 'govt' ? els.cardGovt : els.cardPriv);
@@ -1428,7 +1430,7 @@
                 const msg = document.createElement('div');
                 msg.className = 'deposit-message-popup';
                 // 文言を「民間非銀行が所有する貨幣」に変更
-                msg.innerHTML = '中央銀行の金融市場調節は、<br>国債売買オペレーションにより<br>日銀当座預金(マネタリーベース)を増減させ、<br>国債金利と政策金利を調整する政策手段である。<br><br><span style="color:#ef4444">なのでこの調節は民間非銀行が所有する貨幣(マネーストック)に<br>直接的な影響を与えるものではない。</span>';
+                msg.innerHTML = '中央銀行の金融市場調節は、<br>国債売買オペレーションにより<br>日銀当座預金(マネタリーベース)を増減させ、<br>国債金利と政策金利を調整する政策手段である。<br><br><span style="color:#ef4444">なのでこの調節は民間非銀行の所有する貨幣(マネーストック)に<br>直接的な影響を与えるものではない。</span>';
                 container.appendChild(msg);
                 // setTimeoutによる自動削除は行わない
             }
