@@ -239,7 +239,9 @@
             width: 100%;
             transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s, transform 0.5s;
             border-radius: 6px 6px 0 0; display: flex; align-items: center; justify-content: center;
-            color: white; font-weight: bold; font-size: 0.8rem; min-height: 0px; position: relative; overflow: hidden;
+            /* font-sizeを0.8remから1.0remに変更し、テキストシャドウを追加 */
+            color: white; font-weight: bold; font-size: 1.0rem; min-height: 0px; position: relative; overflow: hidden;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
         
         .bs-bar-content {
