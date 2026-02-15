@@ -958,7 +958,7 @@
             <div class="control-group">
                 <div class="group-label" style="color: var(--govt-color)">政府アクション</div>
                 <div class="btn-row">
-                    <button class="btn-borrow" id="btn-govt-borrow">📉 借入 (発行)</button>
+                    <button class="btn-borrow" id="btn-govt-borrow">📉 国債発行</button>
                     <button class="btn-repay" id="btn-govt-repay">↩️ 償還</button>
                 </div>
                 <div class="btn-row">
@@ -1330,7 +1330,7 @@
                 createParticle(els.bankNode, barLiab, 'var(--liability-color)');
                 showPopup(barAsset, AMOUNT_STEP, 'asset');
                 showPopup(barLiab, AMOUNT_STEP, 'liability');
-                const actionText = sector === 'govt' ? '国債発行' : '信用創造';
+                const actionText = sector === 'govt' ? '銀行向け国債発行' : '信用創造'; // ここを変更する
                 showActionName(sector === 'govt' ? 'card-govt' : 'card-private', actionText, 'var(--liability-color)');
                 updateUI();
             },
@@ -1345,7 +1345,7 @@
                     createParticle(barLiab, els.bankNode, 'var(--liability-color)'); 
                     showPopup(barAsset, -AMOUNT_STEP, 'asset');
                     showPopup(barLiab, -AMOUNT_STEP, 'liability');
-                    const actionText = sector === 'govt' ? '国債償還' : '貨幣消滅';
+                    const actionText = sector === 'govt' ? '銀行向け国債償還' : '貨幣消滅';
                     showActionName(sector === 'govt' ? 'card-govt' : 'card-private', actionText, '#f87171');
                     updateUI();
                 } else {
