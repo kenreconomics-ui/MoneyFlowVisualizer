@@ -714,41 +714,35 @@
 
         /* Responsive UI adjustments for Mobile to mimic PC layout */
         @media (max-width: 768px) {
-            /* 強制的に横並びにする */
+            /* --- Macro View Adjustments (Existing) --- */
             #macro-view .economy-grid {
                 display: flex;
                 flex-direction: row;
-                align-items: stretch; /* 高さ合わせ */
-                gap: 4px; /* 隙間を最小限に */
+                align-items: stretch;
+                gap: 4px;
                 padding: 5px;
             }
-
-            /* カードのスタイル調整 */
             #macro-view .sector-card {
                 padding: 6px 4px;
                 border-radius: 8px;
             }
-
-            /* ヘッダーの簡素化 */
-            .sector-header {
+            #macro-view .sector-header {
                 flex-direction: column;
                 gap: 2px;
                 margin-bottom: 4px;
                 padding-bottom: 4px;
             }
-            .sector-title {
+            #macro-view .sector-title {
                 font-size: 0.65rem;
                 text-align: center;
                 line-height: 1.1;
             }
             #private-sector-title span.generation-info {
-                display: none !important; /* スペースがないので非表示 */
+                display: none !important;
             }
-            .icon-box {
+            #macro-view .icon-box {
                 width: 20px; height: 20px; font-size: 0.8rem;
             }
-
-            /* 中央カラム（銀行） */
             .center-column {
                 width: 30px;
                 margin: 0;
@@ -758,18 +752,14 @@
                 border-width: 1px;
             }
             .bank-icon { font-size: 0.9rem; }
-            .bank-label { display: none; } /* スマホではラベル非表示 */
-
-            /* グラフバー */
+            .bank-label { display: none; }
             .bs-bar { font-size: 0.6rem; }
             .bs-bar-content { font-size: 0.7rem; bottom: 0; }
             .bs-label { font-size: 0.6rem; padding: 2px 0; }
-            
-            /* コントロールパネルも調整 */
             .control-deck {
                 padding: 6px;
                 gap: 6px;
-                justify-content: flex-start; /* 横スクロール前提あるいは詰め込む */
+                justify-content: flex-start;
             }
             .control-group { min-width: auto; flex: 1; }
             button {
@@ -777,8 +767,6 @@
                 font-size: 0.6rem;
             }
             .btn-row { gap: 2px; }
-            
-            /* ステータスバー */
             #macro-view .app-title { font-size: 0.8rem; }
             #macro-view .total-stats { gap: 4px; }
             .stat-label { font-size: 0.5rem; }
@@ -787,16 +775,84 @@
                 padding: 2px 4px; font-size: 0.6rem; 
             }
 
-            /* Micro View Adjustments */
-            #micro-view .main-container { padding: 10px; }
-            .micro-layout-row { flex-direction: column; gap: 10px; max-width: 100%; }
-            .micro-card-container { flex-direction: column; gap: 20px; height: auto; }
-            .micro-card { max-height: 280px; max-width: 100%; height: 300px; }
-            .mc-col { flex-direction: column-reverse; }
-            .stack-box { flex-direction: column-reverse; align-items: stretch; }
-            .block { width: 100% !important; height: auto !important; writing-mode: horizontal-tb; font-size: 0.8rem; }
-            #micro-view .header .micro-layout-row { flex-direction: row; flex-wrap: wrap; justify-content: center; }
-            #micro-view .control-panel .micro-layout-row { flex-direction: row; }
+            /* --- Micro View Adjustments (Updated for Row Layout) --- */
+            #micro-view .main-container { padding: 5px; overflow-y: hidden; } 
+            
+            .micro-layout-row { 
+                flex-direction: column; 
+                gap: 5px; 
+                max-width: 100%; 
+            }
+
+            #micro-view .header .micro-layout-row {
+                flex-direction: row; 
+                flex-wrap: wrap; 
+                gap: 5px;
+            }
+            #micro-view .back-btn { font-size: 0.7rem; padding: 4px 8px; }
+            
+            .micro-stats { gap: 4px; flex-wrap: wrap; justify-content: center; }
+            .m-stat-box { padding: 2px 6px; min-width: 60px; }
+            .m-stat-lbl { font-size: 0.6rem; }
+            .m-stat-val { font-size: 0.8rem; }
+            .gauge-container { width: 40px; height: 24px; }
+            #btn-deposit-focus { padding: 4px; font-size: 0.7rem; margin-right: 2px; }
+
+            /* カードコンテナ：横並びにする */
+            .micro-card-container { 
+                flex-direction: row; 
+                gap: 5px; 
+                height: auto; 
+                align-items: stretch;
+                flex: 1;
+                min-height: 0;
+            }
+
+            /* カード本体 */
+            .micro-card { 
+                max-height: none; 
+                height: 50vh; 
+                width: 50%;
+                max-width: none; 
+                padding: 0;
+                border-radius: 8px;
+            }
+
+            .mc-header {
+                padding: 6px;
+                flex-direction: column;
+                gap: 2px;
+            }
+            .mc-icon { width: 24px; height: 24px; font-size: 1rem; }
+            .mc-title h2 { font-size: 0.7rem; text-align: center; }
+            .mc-title p { display: none; }
+
+            .mc-body {
+                padding: 4px;
+                gap: 2px;
+            }
+
+            .mc-col {
+                border-radius: 4px;
+                /* flex-direction: column; デフォルト維持（上から下へ） */
+            }
+            .mc-col-hdr {
+                font-size: 0.6rem;
+                padding: 2px;
+            }
+            .stack-box {
+                padding: 2px;
+                /* flex-direction: column-reverse; デフォルト維持（下から上へ積み上げ） */
+            }
+
+            .block {
+                font-size: 0.6rem;
+                border-radius: 2px;
+            }
+
+            #micro-view .control-panel { padding: 6px; }
+            .op-btn { padding: 6px 10px; font-size: 0.7rem; margin-right: 4px; border-radius: 6px;}
+            #micro-view .control-panel .micro-layout-row { flex-direction: row; align-items: center; }
         }
     </style>
 </head>
