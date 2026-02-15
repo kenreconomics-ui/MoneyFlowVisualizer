@@ -712,8 +712,82 @@
             transform: scale(1.1);
         }
 
-        /* Responsive UI adjustments */
+        /* Responsive UI adjustments for Mobile to mimic PC layout */
         @media (max-width: 768px) {
+            /* 強制的に横並びにする */
+            #macro-view .economy-grid {
+                display: flex;
+                flex-direction: row;
+                align-items: stretch; /* 高さ合わせ */
+                gap: 4px; /* 隙間を最小限に */
+                padding: 5px;
+            }
+
+            /* カードのスタイル調整 */
+            #macro-view .sector-card {
+                padding: 6px 4px;
+                border-radius: 8px;
+            }
+
+            /* ヘッダーの簡素化 */
+            .sector-header {
+                flex-direction: column;
+                gap: 2px;
+                margin-bottom: 4px;
+                padding-bottom: 4px;
+            }
+            .sector-title {
+                font-size: 0.65rem;
+                text-align: center;
+                line-height: 1.1;
+            }
+            #private-sector-title span.generation-info {
+                display: none !important; /* スペースがないので非表示 */
+            }
+            .icon-box {
+                width: 20px; height: 20px; font-size: 0.8rem;
+            }
+
+            /* 中央カラム（銀行） */
+            .center-column {
+                width: 30px;
+                margin: 0;
+            }
+            .bank-node {
+                width: 30px; height: 30px;
+                border-width: 1px;
+            }
+            .bank-icon { font-size: 0.9rem; }
+            .bank-label { display: none; } /* スマホではラベル非表示 */
+
+            /* グラフバー */
+            .bs-bar { font-size: 0.6rem; }
+            .bs-bar-content { font-size: 0.7rem; bottom: 0; }
+            .bs-label { font-size: 0.6rem; padding: 2px 0; }
+            
+            /* コントロールパネルも調整 */
+            .control-deck {
+                padding: 6px;
+                gap: 6px;
+                justify-content: flex-start; /* 横スクロール前提あるいは詰め込む */
+            }
+            .control-group { min-width: auto; flex: 1; }
+            button {
+                padding: 6px 2px;
+                font-size: 0.6rem;
+            }
+            .btn-row { gap: 2px; }
+            
+            /* ステータスバー */
+            #macro-view .app-title { font-size: 0.8rem; }
+            #macro-view .total-stats { gap: 4px; }
+            .stat-label { font-size: 0.5rem; }
+            #govt-net-display, #private-net-display { font-size: 0.7rem; }
+            .btn-japan, .btn-debt, .btn-money, .btn-reset { 
+                padding: 2px 4px; font-size: 0.6rem; 
+            }
+
+            /* Micro View Adjustments */
             #micro-view .main-container { padding: 10px; }
             .micro-layout-row { flex-direction: column; gap: 10px; max-width: 100%; }
             .micro-card-container { flex-direction: column; gap: 20px; height: auto; }
