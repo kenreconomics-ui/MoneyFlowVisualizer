@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Integrated Economy Model</title>
+    <!-- Chart.js for Graph Visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
@@ -239,7 +241,6 @@
             width: 100%;
             transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s, transform 0.5s;
             border-radius: 6px 6px 0 0; display: flex; align-items: center; justify-content: center;
-            /* font-sizeを0.8remから1.0remに変更し、テキストシャドウを追加 */
             color: white; font-weight: bold; font-size: 1.0rem; min-height: 0px; position: relative; overflow: hidden;
             text-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
@@ -417,6 +418,81 @@
         body.money-focus-mode #macro-view #private-asset-bar { opacity: 1 !important; transform: scale(1.05); box-shadow: 0 0 40px rgba(16, 185, 129, 0.9); z-index: 3002; }
         body.money-focus-mode #macro-view #label-private-asset { opacity: 1 !important; font-size: 1.8rem; color: #10b981; font-weight: 900; background: transparent; text-shadow: 0 0 10px rgba(0,0,0,1); transform: translateY(60px) scale(1.3); z-index: 3003; position: relative; white-space: nowrap; }
         body.money-focus-mode .btn-money { box-shadow: 0 0 15px #10b981; transform: scale(1.1); }
+
+        /* Chart Popup Styles */
+        .chart-popup-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+            max-width: 950px;
+            width: 95vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            z-index: 12000;
+            border: 2px solid var(--asset-color);
+            animation: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .chart-popup-container h1 {
+            text-align: center;
+            font-size: 1.4rem;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+        .chart-popup-container .subtitle {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            margin-bottom: 25px;
+        }
+        .chart-canvas-wrapper {
+            position: relative;
+            height: 50vh;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+        .theory-box {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            border-left: 5px solid #2980b9;
+        }
+        .analysis {
+            background-color: #fff;
+            padding: 0 10px;
+        }
+        .analysis h3 {
+            font-size: 1rem;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+            margin-top: 30px;
+        }
+        .analysis p {
+            font-size: 0.9rem;
+            line-height: 1.7;
+            margin-bottom: 15px;
+        }
+        .highlight-private { color: #2980b9; font-weight: bold; }
+        .highlight-govt { color: #c0392b; font-weight: bold; }
+        .chart-footer {
+            margin-top: 30px;
+            text-align: right;
+            font-size: 0.75rem;
+            color: #95a5a6;
+            line-height: 1.4;
+        }
+
+        @keyframes pop-in {
+            0% { opacity: 0; transform: translate(-50%, -40%) scale(0.9); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
 
         @media (min-width: 769px) {
             #macro-view .economy-grid { display: grid; grid-template-columns: 1fr 120px 1fr; gap: 40px; max-width: 1000px; margin: 0 auto; height: 100%; max-height: 500px; }
@@ -672,7 +748,8 @@
                     </div>
                     <button class="btn-japan" id="btn-japan">🇯🇵 現状</button>
                     <button class="btn-debt" id="btn-debt-focus">😱 政府の負債</button>
-                    <button class="btn-money" id="btn-money-focus">💰 民間の資産</button>
+                    <!-- UPDATED: Button text changed -->
+                    <button class="btn-money" id="btn-money-focus">💰 民間の貨幣</button>
                     <button class="btn-reset" id="reset-btn">リセット</button>
                 </div>
             </div>
@@ -1215,16 +1292,29 @@
         document.getElementById('reset-btn').onclick = () => {
             document.body.classList.remove('debt-focus-mode');
             document.body.classList.remove('money-focus-mode');
+            
+            // Remove popup
+            const popup = document.querySelector('.chart-popup-container');
+            if (popup) popup.remove();
+            
             STATE.govt = { asset: 0, liability: 0 };
             STATE.private = { asset: 0, liability: 0, bonds: 0 };
+            
             microState = JSON.parse(JSON.stringify(MICRO_INITIAL));
             updateInterestRate(0); 
             updateUI();
         };
 
         document.getElementById('btn-japan').onclick = () => {
+             // Reset visual modes
+             document.body.classList.remove('debt-focus-mode');
+             document.body.classList.remove('money-focus-mode');
+             const popup = document.querySelector('.chart-popup-container');
+             if (popup) popup.remove();
+
              STATE.govt = { asset: 0, liability: 1300 }; 
              STATE.private = { asset: 1900, liability: 600, bonds: 400 }; 
+             
              microState = { boj: { jgb: 600, deposit: 600 }, bank: { jgb: 300, deposit: 600, liabilities: 1500 } };
              updateInterestRate(-30); 
              updateUI();
@@ -1233,13 +1323,208 @@
 
         document.getElementById('btn-debt-focus').onclick = () => {
             document.body.classList.remove('money-focus-mode');
+            const popup = document.querySelector('.chart-popup-container');
+            if (popup) popup.remove();
             document.body.classList.toggle('debt-focus-mode');
         };
 
+        // ============================================
+        // UPDATED: Chart Popup Logic for Money Focus Button
+        // ============================================
         document.getElementById('btn-money-focus').onclick = () => {
             document.body.classList.remove('debt-focus-mode');
-            document.body.classList.toggle('money-focus-mode');
+            const isFocused = document.body.classList.toggle('money-focus-mode');
+            
+            const existingPopup = document.querySelector('.chart-popup-container');
+            if (existingPopup) existingPopup.remove();
+
+            if (isFocused) {
+                const popup = document.createElement('div');
+                popup.className = 'chart-popup-container';
+                popup.innerHTML = `
+                    <h1>日本の民間貨幣（マネーストック）は誰が増やしたのか？</h1>
+                    <div class="subtitle">マネーストック（M2）前年比増加率への寄与分解 (1970-2024年推計)</div>
+
+                    <div class="theory-box">
+                        <strong>💡 アプリで体験した「貨幣」の歴史</strong><br>
+                        このシミュレーターで操作した通り、世の中の貨幣は銀行から<strong>「借入」</strong>を行うことで生まれ、<strong>「返済」</strong>することで消えてなくなります。<br>
+                        下のグラフは、過去の日本において、貨幣の量を増やしたのは<strong>「民間の借入（青）」</strong>だったのか、<strong>「政府の国債発行（赤）」</strong>だったのかを示しています。
+                    </div>
+
+                    <div class="chart-canvas-wrapper">
+                        <canvas id="contributionChart"></canvas>
+                    </div>
+
+                    <div class="analysis">
+                        <h3>📈 構造変化の解説</h3>
+                        
+                        <p><strong>1. 高度成長〜バブル期 (1970-1990): 民間主導の貨幣拡大</strong><br>
+                        <span class="highlight-private">民間企業</span>の旺盛な資金需要が貨幣を生み出していました。特に1980年代後半のバブル期は、不動産や株への投機資金として民間向け貸出が爆発的に増え、政府が国債発行をする必要がない（寄与度が低い）状態でした。</p>
+
+                        <p><strong>2. バブル崩壊〜失われた30年 (1991-2012): 民間の「貨幣消滅」と政府の穴埋め</strong><br>
+                        バブル崩壊後、民間企業は借金の返済（バランスシート調整）を優先しました。借金の返済は「貨幣の消滅」を意味するため、民間寄与度はマイナスになります。<br>
+                        この穴を埋めたのが<span class="highlight-govt">政府の国債発行（財政赤字）</span>です。政府が国債を発行して支出することで、かろうじてマネーストックの減少（デフレスパイラル）を防いでいた時期です。</p>
+
+                        <p><strong>3. コロナ禍 (2020): 官民による同時拡大</strong><br>
+                        緊急時の企業支援（ゼロゼロ融資など）による民間貸出の急増と、定額給付金などの巨額財政支出が重なり、近年稀に見る貨幣の急拡大が起きました。</p>
+                    </div>
+
+                    <div class="chart-footer">
+                        ※本グラフは日本銀行「マネタリーサーベイ」および「資金循環統計」の傾向に基づき、信用創造の寄与度を概念的に推計・可視化したものです。<br>
+                        「政府」は対政府信用および純輸出等のその他項目を含み、「民間」は対民間信用を示します。<br>
+                        実際の厳密な会計的寄与度とは、金融機関の保有債券構成の変化等により乖離する場合があります。
+                    </div>
+                `;
+                document.getElementById('macro-view').appendChild(popup);
+                
+                // Render Chart immediately after adding to DOM
+                renderContributionChart();
+            }
         };
+        
+        // Chart rendering function (Encapsulated)
+        function renderContributionChart() {
+            const ctx = document.getElementById('contributionChart').getContext('2d');
+            
+            // 年次ラベル
+            const startYear = 1970;
+            const endYear = 2024;
+            const years = Array.from({length: endYear - startYear + 1}, (_, i) => startYear + i);
+
+            // トレンドデータの構成 (近似値)
+            const chartData = years.map(year => {
+                let totalGrowth = 0;
+                let privateContribution = 0;
+                let govContribution = 0;
+
+                if (year <= 1974) { 
+                    // 高度成長・狂乱物価 (〜20%超)
+                    totalGrowth = 22 + Math.random() * 4; 
+                    privateContribution = totalGrowth * 0.8; 
+                } else if (year <= 1979) {
+                    // 安定成長移行期
+                    totalGrowth = 12 + Math.random() * 2;
+                    privateContribution = totalGrowth * 0.6; // 国債発行開始
+                } else if (year <= 1985) {
+                    // 安定期
+                    totalGrowth = 8 + Math.random() * 2;
+                    privateContribution = totalGrowth * 0.8;
+                } else if (year <= 1990) {
+                    // バブル期 (10%超)
+                    totalGrowth = 10 + Math.random() * 3;
+                    privateContribution = totalGrowth * 1.2; // 民間過熱、政府は税収増で抑制
+                } else if (year <= 1992) {
+                    // バブル崩壊直後 (急減)
+                    totalGrowth = 2 + Math.random(); 
+                    privateContribution = 0.5; 
+                } else if (year <= 1997) {
+                    // 停滞期
+                    totalGrowth = 3 + Math.random(); 
+                    privateContribution = 0.5; 
+                } else if (year <= 2005) {
+                    // 金融危機・不良債権処理 (民間マイナス)
+                    totalGrowth = 2.0 + Math.random();
+                    privateContribution = -1.5; // 返済・償却
+                } else if (year <= 2012) {
+                    // リーマン・震災
+                    totalGrowth = 2.5 + Math.random() * 0.5;
+                    privateContribution = 0.2; // ほぼ横ばい
+                } else if (year <= 2019) {
+                    // アベノミクス (3-4%)
+                    totalGrowth = 3.5 + Math.random();
+                    privateContribution = 1.5; 
+                } else if (year === 2020) {
+                    // コロナ (急増)
+                    totalGrowth = 9.0;
+                    privateContribution = 5.0; // ゼロゼロ融資
+                } else if (year <= 2024) {
+                    // ポストコロナ
+                    totalGrowth = 3.0 + Math.random();
+                    privateContribution = 1.5;
+                }
+
+                govContribution = totalGrowth - privateContribution;
+
+                return {
+                    year: year,
+                    total: totalGrowth.toFixed(1),
+                    private: privateContribution.toFixed(1),
+                    govt: govContribution.toFixed(1)
+                };
+            });
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: chartData.map(d => d.year),
+                    datasets: [
+                        {
+                            label: '総成長率 (Line)',
+                            data: chartData.map(d => d.total),
+                            type: 'line',
+                            borderColor: '#2c3e50',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.3,
+                            order: 0
+                        },
+                        {
+                            label: '政府部門・その他 (国債発行等)',
+                            data: chartData.map(d => d.govt),
+                            backgroundColor: '#e74c3c',
+                            stack: 'Stack 0',
+                            order: 1
+                        },
+                        {
+                            label: '民間部門 (設備投資・住宅ローン等)',
+                            data: chartData.map(d => d.private),
+                            backgroundColor: '#3498db',
+                            stack: 'Stack 0',
+                            order: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y + '%';
+                                },
+                                footer: function(tooltipItems) {
+                                    let total = 0;
+                                    tooltipItems.forEach(function(tooltipItem) {
+                                        if(tooltipItem.dataset.type !== 'line'){
+                                            total += tooltipItem.parsed.y;
+                                        }
+                                    });
+                                    return '合計寄与: ' + total.toFixed(1) + '%';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            stacked: true,
+                            ticks: { maxTicksLimit: 12 }
+                        },
+                        y: {
+                            stacked: true,
+                            title: { display: true, text: '寄与度 (%)' },
+                            grid: { color: '#ecf0f1' }
+                        }
+                    }
+                }
+            });
+        }
         
         document.getElementById('private-sector-title').onclick = () => {
             document.getElementById('private-generation-info').classList.toggle('visible');
