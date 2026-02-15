@@ -970,7 +970,7 @@
                 <div class="group-label" style="color: var(--text-sub)">市場流通</div>
                 <div class="btn-row">
                     <button class="btn-bond" id="btn-bond-buy">📜 国債購入</button>
-                    <button class="btn-redeem" id="btn-bond-sell">💰 国債売却</button>
+                    <button class="btn-redeem" id="btn-bond-sell">💰 国債償還</button>
                 </div>
             </div>
 
@@ -1388,7 +1388,7 @@
                     createParticle(els.privABar, els.govtABar, 'var(--private-color)');
                     showPopup(els.govtABar, AMOUNT_STEP, 'asset');
                     showPopup(els.govtLBar, AMOUNT_STEP, 'liability');
-                    showActionName('card-private', '国債購入', '#3b82f6');
+                    showActionName('card-private', '民間の国債購入', '#3b82f6');
                     updateUI();
                 } else {
                     shake(els.cardPriv);
@@ -1402,7 +1402,7 @@
                     createParticle(els.govtABar, els.privABar, 'var(--govt-color)');
                     showPopup(els.govtLBar, -AMOUNT_STEP, 'liability');
                     showPopup(els.govtABar, -AMOUNT_STEP, 'asset');
-                    showActionName('card-private', '市場売却', '#06b6d4');
+                    showActionName('card-private', '民間の国債償還', '#06b6d4');
                     updateUI();
                 } else {
                     shake(els.cardGovt);
