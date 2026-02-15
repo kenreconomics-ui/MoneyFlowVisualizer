@@ -1501,7 +1501,6 @@
 
                     <div class="chart-footer">
                         ※本グラフは日本銀行「マネタリーサーベイ」および「資金循環統計」の傾向に基づき、信用創造の寄与度を概念的に推計・可視化したものです。<br>
-                        「政府」は対政府信用および純輸出等のその他項目を含み、「民間」は対民間信用を示します。<br>
                         実際の厳密な会計的寄与度とは、金融機関の保有債券構成の変化等により乖離する場合があります。
                     </div>
                 `;
@@ -1583,6 +1582,64 @@
                 };
             });
 
+            // バブル崩壊ラインを描画するカスタムプラグイン
+            const bubbleBurstPlugin = {
+                id: 'bubbleBurstAnnotation',
+                afterDatasetsDraw(chart, args, options) {
+                    const { ctx, chartArea: { top, bottom }, scales: { x, y } } = chart;
+                    
+                    // Find indices
+                    const labels = chart.data.labels;
+                    const index1990 = labels.indexOf(1990);
+                    const index1991 = labels.indexOf(1991);
+
+                    if (index1990 !== -1 && index1991 !== -1) {
+                        // Use indices to get pixels on the category axis
+                        const x1 = x.getPixelForValue(index1990);
+                        const x2 = x.getPixelForValue(index1991);
+                        
+                        // Calculate midpoint between the two bars
+                        const xPos = (x1 + x2) / 2;
+
+                        const text = 'バブル崩壊';
+                        ctx.font = 'bold 16px Inter, sans-serif'; // Increased font size from 12px to 16px
+                        const metrics = ctx.measureText(text);
+                        const textWidth = metrics.width;
+                        const textHeight = 18; // Increased height to accommodate larger font
+                        const padding = 6; // Increased padding slightly
+                        const yPos = top + 15;
+                        const rectX = xPos - textWidth / 2 - padding;
+                        const rectY = yPos - textHeight + 4; // Adjusted Y position
+                        const rectW = textWidth + padding * 2;
+                        const rectH = textHeight + padding;
+
+                        ctx.save();
+                        
+                        // 点線の描画
+                        ctx.beginPath();
+                        ctx.lineWidth = 2;
+                        ctx.strokeStyle = '#e74c3c';
+                        ctx.setLineDash([5, 5]);
+                        ctx.moveTo(xPos, top);
+                        ctx.lineTo(xPos, bottom);
+                        ctx.stroke();
+
+                        // 背景の白箱を描画 (Keeping the white background to ensure readability over the dotted line)
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                        ctx.fillRect(rectX, rectY, rectW, rectH);
+
+                        // Removed the black border drawing code block.
+
+                        // テキストを描画
+                        ctx.fillStyle = '#c0392b';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(text, xPos, yPos);
+                        
+                        ctx.restore();
+                    }
+                }
+            };
+
             new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -1652,7 +1709,8 @@
                             grid: { color: '#ecf0f1' }
                         }
                     }
-                }
+                },
+                plugins: [bubbleBurstPlugin] // カスタムプラグインの登録
             });
         }
         
