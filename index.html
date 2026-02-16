@@ -1331,7 +1331,7 @@
                 createParticle(els.bankNode, barLiab, 'var(--liability-color)');
                 showPopup(barAsset, AMOUNT_STEP, 'asset');
                 showPopup(barLiab, AMOUNT_STEP, 'liability');
-                const actionText = sector === 'govt' ? '銀行向け国債発行' : '信用創造'; // ここを変更する
+                const actionText = sector === 'govt' ? '発行国債を銀行が購入' : '信用創造'; // ここを変更
                 showActionName(sector === 'govt' ? 'card-govt' : 'card-private', actionText, 'var(--liability-color)');
                 updateUI();
             },
@@ -1346,7 +1346,7 @@
                     createParticle(barLiab, els.bankNode, 'var(--liability-color)'); 
                     showPopup(barAsset, -AMOUNT_STEP, 'asset');
                     showPopup(barLiab, -AMOUNT_STEP, 'liability');
-                    const actionText = sector === 'govt' ? '銀行向け国債償還' : '貨幣消滅';
+                    const actionText = sector === 'govt' ? '銀行保有国債の償還' : '貨幣消滅'; // ここを変更
                     showActionName(sector === 'govt' ? 'card-govt' : 'card-private', actionText, '#f87171');
                     updateUI();
                 } else {
@@ -1389,7 +1389,7 @@
                     createParticle(els.privABar, els.govtABar, 'var(--private-color)');
                     showPopup(els.govtABar, AMOUNT_STEP, 'asset');
                     showPopup(els.govtLBar, AMOUNT_STEP, 'liability');
-                    showActionName('card-private', '民間の国債購入', '#3b82f6');
+                    showActionName('card-private', '発行国債を民間が購入', '#3b82f6');
                     updateUI();
                 } else {
                     shake(els.cardPriv);
@@ -1403,7 +1403,7 @@
                     createParticle(els.govtABar, els.privABar, 'var(--govt-color)');
                     showPopup(els.govtLBar, -AMOUNT_STEP, 'liability');
                     showPopup(els.govtABar, -AMOUNT_STEP, 'asset');
-                    showActionName('card-private', '民間の国債償還', '#06b6d4');
+                    showActionName('card-private', '民間保有国債の償還', '#06b6d4');
                     updateUI();
                 } else {
                     shake(els.cardGovt);
