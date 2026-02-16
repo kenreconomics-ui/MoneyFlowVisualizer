@@ -40,6 +40,44 @@
             --loan-color: #d97706; /* 貸出金の色 */
         }
 
+        /* Bank Tooltip Style */
+        .bank-tooltip {
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background: rgba(30, 41, 59, 0.95);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            line-height: 1.4;
+        }
+        .bank-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: rgba(30, 41, 59, 0.95) transparent transparent transparent;
+        }
+        .bank-node:hover .bank-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -916,10 +954,11 @@
                 </div>
 
                 <div class="center-column">
-                    <div class="bank-node" id="bank-node" title="クリックして詳細を見る">
+                    <div class="bank-node" id="bank-node">
                         <div class="bank-icon">🏦</div>
                         <div class="bank-label">銀行システム</div>
                         <div class="shockwave-ring" id="bank-shockwave"></div>
+                        <div class="bank-tooltip">銀行システム（中央銀行＋民間銀行）<br>内部の金融調節処理へ</div>
                     </div>
                 </div>
 
