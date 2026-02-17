@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Money Creation Simulator</title>
-    <!-- Chart.js for Graph Visualization -->
+    <!-- Chart.js is no longer used for the popup, but keeping it if needed later -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -652,7 +652,6 @@
         .blk-jgb { background: var(--jgb-color); }
         .blk-money { background: var(--money-color); }
         .blk-liab { background: #cbd5e1; color: #64748b; }
-        /* 政府預金の色を貸出金・民間貨幣と同じ色に変更 */
         .blk-govt { background: #cbd5e1; color: #64748b; }
         /* 貸出金の色を負債の民間貨幣と同じ色に変更 */
         .blk-loan { background: #cbd5e1; color: #64748b; }
@@ -1512,247 +1511,18 @@
                 const popup = document.createElement('div');
                 popup.className = 'chart-popup-container';
                 popup.innerHTML = `
-                    <h1>日本の民間貨幣（マネーストック）は誰が増やしたのか？</h1>
-                    <div class="subtitle">マネーストック（M2）前年比増加率への寄与分解 (1970-2024年推計)</div>
-
-                    <div class="theory-box">
-                        <strong>💡 アプリで体験した「貨幣」の歴史</strong><br>
-                        このシミュレーターで操作した通り、世の中の貨幣は銀行から<strong>「借入」</strong>を行うことで生まれ、<strong>「返済」</strong>することで消えてなくなります。<br>
-                        下のグラフは、過去の日本において、貨幣の量を増やしたのは<strong>「民間の借入（青）」</strong>だったのか、<strong>「政府の国債発行（赤）」</strong>だったのかを示しています。
-                    </div>
-
-                    <div class="chart-canvas-wrapper">
-                        <canvas id="contributionChart"></canvas>
-                    </div>
-
-                    <div class="analysis">
-                        <h3>📈 構造変化の解説</h3>
-                        
-                        <p><strong>1. 高度成長〜バブル期 (1970-1990): 民間主導の貨幣拡大</strong><br>
-                        <span class="highlight-private">民間企業</span>の旺盛な資金需要が貨幣を生み出していました。特に1980年代後半のバブル期は、不動産や株への投機資金として民間向け貸出が爆発的に増え、政府が国債発行をする必要がない（寄与度が低い）状態でした。</p>
-
-                        <p><strong>2. バブル崩壊〜失われた30年 (1991-2012): 民間の「貨幣消滅」と政府の穴埋め</strong><br>
-                        バブル崩壊後、民間企業は借金の返済（バランスシート調整）を優先しました。借金の返済は「貨幣の消滅」を意味するため、民間寄与度はマイナスになります。<br>
-                        この穴を埋めたのが<span class="highlight-govt">政府の国債発行（財政赤字）</span>です。政府が国債を発行して支出することで、かろうじてマネーストックの減少（デフレスパイラル）を防いでいた時期です。</p>
-
-                        <p><strong>3. コロナ禍 (2020): 官民による同時拡大</strong><br>
-                        緊急時の企業支援（ゼロゼロ融資など）による民間貸出の急増と、定額給付金などの巨額財政支出が重なり、近年稀に見る貨幣の急拡大が起きました。</p>
-                    </div>
-
-                    <div class="chart-footer">
-                        ※本グラフは日本銀行「マネタリーサーベイ」および「資金循環統計」の傾向に基づき、信用創造の寄与度を概念的に推計・可視化したものです。<br>
-                        実際の厳密な会計的寄与度とは、金融機関の保有債券構成の変化等により乖離する場合があります。
+                    <div style="width:100%; height:100%; display:flex; flex-direction:column;">
+                         <iframe src="asset.html" style="flex:1; width:100%; border:none; min-height:60vh;"></iframe>
+                         <div style="text-align:center; margin-top:10px;">
+                            <small style="color:#999;">※元の画面に戻るには「民間の貨幣」ボタンをもう一度押してください</small>
+                         </div>
                     </div>
                 `;
                 document.getElementById('macro-view').appendChild(popup);
-                
-                // Render Chart immediately after adding to DOM
-                renderContributionChart();
             }
         };
-        
-        // Chart rendering function (Encapsulated)
-        function renderContributionChart() {
-            const ctx = document.getElementById('contributionChart').getContext('2d');
-            
-            // 年次ラベル
-            const startYear = 1970;
-            const endYear = 2024;
-            const years = Array.from({length: endYear - startYear + 1}, (_, i) => startYear + i);
 
-            // トレンドデータの構成 (近似値)
-            const chartData = years.map(year => {
-                let totalGrowth = 0;
-                let privateContribution = 0;
-                let govContribution = 0;
-
-                if (year <= 1974) { 
-                    // 高度成長・狂乱物価 (〜20%超)
-                    totalGrowth = 22 + Math.random() * 4; 
-                    privateContribution = totalGrowth * 0.8; 
-                } else if (year <= 1979) {
-                    // 安定成長移行期
-                    totalGrowth = 12 + Math.random() * 2;
-                    privateContribution = totalGrowth * 0.6; // 国債発行開始
-                } else if (year <= 1985) {
-                    // 安定期
-                    totalGrowth = 8 + Math.random() * 2;
-                    privateContribution = totalGrowth * 0.8;
-                } else if (year <= 1990) {
-                    // バブル期 (10%超)
-                    totalGrowth = 10 + Math.random() * 3;
-                    privateContribution = totalGrowth * 1.2; // 民間過熱、政府は税収増で抑制
-                } else if (year <= 1992) {
-                    // バブル崩壊直後 (急減)
-                    totalGrowth = 2 + Math.random(); 
-                    privateContribution = 0.5; 
-                } else if (year <= 1997) {
-                    // 停滞期
-                    totalGrowth = 3 + Math.random(); 
-                    privateContribution = 0.5; 
-                } else if (year <= 2005) {
-                    // 金融危機・不良債権処理 (民間マイナス)
-                    totalGrowth = 2.0 + Math.random();
-                    privateContribution = -1.5; // 返済・償却
-                } else if (year <= 2012) {
-                    // リーマン・震災
-                    totalGrowth = 2.5 + Math.random() * 0.5;
-                    privateContribution = 0.2; // ほぼ横ばい
-                } else if (year <= 2019) {
-                    // アベノミクス (3-4%)
-                    totalGrowth = 3.5 + Math.random();
-                    privateContribution = 1.5; 
-                } else if (year === 2020) {
-                    // コロナ (急増)
-                    totalGrowth = 9.0;
-                    privateContribution = 5.0; // ゼロゼロ融資
-                } else if (year <= 2024) {
-                    // ポストコロナ
-                    totalGrowth = 3.0 + Math.random();
-                    privateContribution = 1.5;
-                }
-
-                govContribution = totalGrowth - privateContribution;
-
-                return {
-                    year: year,
-                    total: totalGrowth.toFixed(1),
-                    private: privateContribution.toFixed(1),
-                    govt: govContribution.toFixed(1)
-                };
-            });
-
-            // バブル崩壊ラインを描画するカスタムプラグイン
-            const bubbleBurstPlugin = {
-                id: 'bubbleBurstAnnotation',
-                afterDatasetsDraw(chart, args, options) {
-                    const { ctx, chartArea: { top, bottom }, scales: { x, y } } = chart;
-                    
-                    // Find indices
-                    const labels = chart.data.labels;
-                    const index1990 = labels.indexOf(1990);
-                    const index1991 = labels.indexOf(1991);
-
-                    if (index1990 !== -1 && index1991 !== -1) {
-                        // Use indices to get pixels on the category axis
-                        const x1 = x.getPixelForValue(index1990);
-                        const x2 = x.getPixelForValue(index1991);
-                        
-                        // Calculate midpoint between the two bars
-                        const xPos = (x1 + x2) / 2;
-
-                        const text = 'バブル崩壊';
-                        ctx.font = 'bold 16px Inter, sans-serif'; // Increased font size from 12px to 16px
-                        const metrics = ctx.measureText(text);
-                        const textWidth = metrics.width;
-                        const textHeight = 18; // Increased height to accommodate larger font
-                        const padding = 6; // Increased padding slightly
-                        const yPos = top + 15;
-                        const rectX = xPos - textWidth / 2 - padding;
-                        const rectY = yPos - textHeight + 4; // Adjusted Y position
-                        const rectW = textWidth + padding * 2;
-                        const rectH = textHeight + padding;
-
-                        ctx.save();
-                        
-                        // 点線の描画
-                        ctx.beginPath();
-                        ctx.lineWidth = 2;
-                        ctx.strokeStyle = '#e74c3c';
-                        ctx.setLineDash([5, 5]);
-                        ctx.moveTo(xPos, top);
-                        ctx.lineTo(xPos, bottom);
-                        ctx.stroke();
-
-                        // 背景の白箱を描画 (Keeping the white background to ensure readability over the dotted line)
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-                        ctx.fillRect(rectX, rectY, rectW, rectH);
-
-                        // Removed the black border drawing code block.
-
-                        // テキストを描画
-                        ctx.fillStyle = '#c0392b';
-                        ctx.textAlign = 'center';
-                        ctx.fillText(text, xPos, yPos);
-                        
-                        ctx.restore();
-                    }
-                }
-            };
-
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: chartData.map(d => d.year),
-                    datasets: [
-                        {
-                            label: '総成長率 (Line)',
-                            data: chartData.map(d => d.total),
-                            type: 'line',
-                            borderColor: '#2c3e50',
-                            borderWidth: 2,
-                            pointRadius: 0,
-                            tension: 0.3,
-                            order: 0
-                        },
-                        {
-                            label: '政府部門・その他 (国債発行等)',
-                            data: chartData.map(d => d.govt),
-                            backgroundColor: '#e74c3c',
-                            stack: 'Stack 0',
-                            order: 1
-                        },
-                        {
-                            label: '民間部門 (設備投資・住宅ローン等)',
-                            data: chartData.map(d => d.private),
-                            backgroundColor: '#3498db',
-                            stack: 'Stack 0',
-                            order: 2
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    plugins: {
-                        legend: { position: 'top' },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.dataset.label + ': ' + context.parsed.y + '%';
-                                },
-                                footer: function(tooltipItems) {
-                                    let total = 0;
-                                    tooltipItems.forEach(function(tooltipItem) {
-                                        if(tooltipItem.dataset.type !== 'line'){
-                                            total += tooltipItem.parsed.y;
-                                        }
-                                    });
-                                    return '合計寄与: ' + total.toFixed(1) + '%';
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            grid: { display: false },
-                            stacked: true,
-                            ticks: { maxTicksLimit: 12 }
-                        },
-                        y: {
-                            stacked: true,
-                            title: { display: true, text: '寄与度 (%)' },
-                            grid: { color: '#ecf0f1' }
-                        }
-                    }
-                },
-                plugins: [bubbleBurstPlugin] // カスタムプラグインの登録
-            });
-        }
+        // Chart rendering function is removed as it's no longer needed for popup
         
         document.getElementById('private-sector-title').onclick = () => {
             document.getElementById('private-generation-info').classList.toggle('visible');
