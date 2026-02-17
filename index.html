@@ -1459,12 +1459,17 @@
         document.getElementById('btn-bond-sell').onclick = () => actions.bondSell();
         
         document.getElementById('reset-btn').onclick = () => {
+            // bodyへのクラス操作をリセット
             document.body.classList.remove('debt-focus-mode');
             document.body.classList.remove('money-focus-mode');
             
-            // Remove popup
-            const popup = document.querySelector('.chart-popup-container');
-            if (popup) popup.remove();
+            // 全画面表示(iframe)のリセット
+            const assetView = document.getElementById('asset-view-iframe');
+            if (assetView) assetView.remove();
+            const canvasContainer = document.querySelector('.canvas-container');
+            const footer = document.getElementById('footer');
+            if(canvasContainer) canvasContainer.style.display = '';
+            if(footer) footer.style.display = '';
             
             STATE.govt = { asset: 0, liability: 0 };
             STATE.private = { asset: 0, liability: 0, bonds: 0 };
@@ -1475,11 +1480,17 @@
         };
 
         document.getElementById('btn-japan').onclick = () => {
-             // Reset visual modes
-             document.body.classList.remove('debt-focus-mode');
-             document.body.classList.remove('money-focus-mode');
-             const popup = document.querySelector('.chart-popup-container');
-             if (popup) popup.remove();
+            // bodyへのクラス操作をリセット
+            document.body.classList.remove('debt-focus-mode');
+            document.body.classList.remove('money-focus-mode');
+            
+            // 全画面表示(iframe)のリセット
+            const assetView = document.getElementById('asset-view-iframe');
+            if (assetView) assetView.remove();
+            const canvasContainer = document.querySelector('.canvas-container');
+            const footer = document.getElementById('footer');
+            if(canvasContainer) canvasContainer.style.display = '';
+            if(footer) footer.style.display = '';
 
              STATE.govt = { asset: 0, liability: 1300 }; 
              STATE.private = { asset: 1900, liability: 600, bonds: 400 }; 
@@ -1491,38 +1502,63 @@
         };
 
         document.getElementById('btn-debt-focus').onclick = () => {
-            document.body.classList.remove('money-focus-mode');
-            const popup = document.querySelector('.chart-popup-container');
-            if (popup) popup.remove();
+            // iframe表示中なら閉じる
+            if (document.body.classList.contains('money-focus-mode')) {
+                 const assetView = document.getElementById('asset-view-iframe');
+                 if (assetView) assetView.remove();
+                 document.querySelector('.canvas-container').style.display = '';
+                 document.getElementById('footer').style.display = '';
+                 document.body.classList.remove('money-focus-mode');
+            }
             document.body.classList.toggle('debt-focus-mode');
         };
 
         // ============================================
-        // UPDATED: Chart Popup Logic for Money Focus Button
+        // UPDATED: Full-screen iframe Logic for Money Focus Button
         // ============================================
         document.getElementById('btn-money-focus').onclick = () => {
-            document.body.classList.remove('debt-focus-mode');
             const isFocused = document.body.classList.toggle('money-focus-mode');
             
-            const existingPopup = document.querySelector('.chart-popup-container');
-            if (existingPopup) existingPopup.remove();
+            const assetViewId = 'asset-view-iframe';
+            const existingAssetView = document.getElementById(assetViewId);
+            const canvasContainer = document.querySelector('.canvas-container');
+            const footer = document.getElementById('footer');
 
             if (isFocused) {
-                const popup = document.createElement('div');
-                popup.className = 'chart-popup-container';
-                popup.innerHTML = `
-                    <div style="width:100%; height:100%; display:flex; flex-direction:column;">
-                         <iframe src="asset.html" style="flex:1; width:100%; border:none; min-height:60vh;"></iframe>
-                         <div style="text-align:center; margin-top:10px;">
-                            <small style="color:#999;">※元の画面に戻るには「民間の貨幣」ボタンをもう一度押してください</small>
-                         </div>
-                    </div>
+                // 他のモードをリセット
+                document.body.classList.remove('debt-focus-mode');
+                
+                // メインコンテンツを隠す
+                if(canvasContainer) canvasContainer.style.display = 'none';
+                if(footer) footer.style.display = 'none';
+
+                // iframeコンテナを作成して挿入
+                const container = document.createElement('div');
+                container.id = assetViewId;
+                // flex: 1 で残りの高さを埋める
+                container.style.flex = '1';
+                container.style.width = '100%';
+                container.style.position = 'relative';
+                container.style.overflow = 'hidden';
+                container.style.display = 'flex';
+                container.style.flexDirection = 'column';
+                
+                container.innerHTML = `
+                     <iframe src="asset.html" style="flex:1; width:100%; border:none;"></iframe>
+                     <div style="text-align:center; padding: 10px; background: #fff; border-top: 1px solid #eee;">
+                        <small style="color:#64748b; font-weight:bold;">※「民間の貨幣」ボタンをもう一度押すと元の画面に戻ります</small>
+                     </div>
                 `;
-                document.getElementById('macro-view').appendChild(popup);
+                // ヘッダーの下（macro-viewの最後）に追加
+                document.getElementById('macro-view').appendChild(container);
+
+            } else {
+                // 解除時の処理
+                if (existingAssetView) existingAssetView.remove();
+                if(canvasContainer) canvasContainer.style.display = '';
+                if(footer) footer.style.display = '';
             }
         };
-
-        // Chart rendering function is removed as it's no longer needed for popup
         
         document.getElementById('private-sector-title').onclick = () => {
             document.getElementById('private-generation-info').classList.toggle('visible');
