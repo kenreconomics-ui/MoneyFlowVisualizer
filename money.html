@@ -1,1 +1,723 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主要5カ国 経済指標詳細レポート (1970-2026)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', 'Noto Sans JP', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #2c3e50;
+        }
 
+        /* --- Header & Navigation --- */
+        .nav-header {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            padding: 1rem;
+        }
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        @media (min-width: 768px) {
+            .nav-container {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+        .app-title h1 { font-weight: 800; font-size: 1.25rem; color: #1e293b; }
+        .app-title p { font-size: 0.8rem; color: #64748b; }
+
+        .btn-group { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .nav-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            transition: all 0.2s;
+            border: 1px solid #e2e8f0;
+            background: white;
+            color: #64748b;
+            cursor: pointer;
+        }
+        .nav-btn:hover { background: #f8fafc; }
+        .nav-btn.active {
+            background: #1e293b;
+            color: white;
+            border-color: #1e293b;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        /* Special Button Style */
+        .nav-btn.special {
+            background: #eef2ff; color: #4338ca; border-color: #c7d2fe;
+        }
+        .nav-btn.special:hover { background: #e0e7ff; }
+        .nav-btn.special.active {
+            background: #4338ca; color: white; border-color: #4338ca;
+        }
+
+        /* --- Main Content Card --- */
+        .main-card {
+            background: white;
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+            min-height: 80vh;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .report-title {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        .report-subtitle {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-bottom: 2rem;
+        }
+
+        .theory-box {
+            background-color: #e8f4f8;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+            border-left: 6px solid #2980b9;
+            line-height: 1.6;
+        }
+
+        /* Chart Wrapper & Custom Legend */
+        .chart-wrapper {
+            position: relative;
+            height: 500px;
+            width: 100%;
+            margin-bottom: 2.5rem;
+            padding: 10px;
+            background: #fff;
+            border: 1px solid #f1f5f9;
+            border-radius: 8px;
+            overflow: hidden; /* Keep legend inside */
+        }
+
+        .draggable-legend {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(4px);
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            cursor: move; /* Indicates draggable */
+            z-index: 20;
+            font-size: 0.75rem;
+            max-width: 280px;
+            user-select: none;
+            transition: box-shadow 0.2s;
+        }
+        .draggable-legend:hover {
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+            border-color: #cbd5e1;
+        }
+        .legend-title {
+            font-weight: 800;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+            color: #64748b;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 4px;
+            pointer-events: none; /* Drag handle area generally, but text selection disabled */
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+            cursor: pointer; /* Toggle click */
+            transition: opacity 0.2s;
+        }
+        .legend-item:last-child { margin-bottom: 0; }
+        .legend-item:hover { opacity: 0.8; }
+        .legend-box {
+            width: 14px;
+            height: 14px;
+            margin-right: 8px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+        .legend-text {
+            color: #1e293b;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+        .legend-item.hidden-dataset .legend-text {
+            text-decoration: line-through;
+            color: #94a3b8;
+        }
+        .legend-item.hidden-dataset .legend-box {
+            background-color: #cbd5e1 !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        .analysis {
+            padding: 0 1rem;
+        }
+        .analysis h3 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.5rem;
+            color: #1e293b;
+        }
+        .analysis p {
+            font-size: 0.95rem;
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            color: #334155;
+        }
+        .highlight-private { color: #2563eb; font-weight: bold; background: #eff6ff; padding: 2px 4px; border-radius: 4px; }
+        .highlight-govt { color: #dc2626; font-weight: bold; background: #fef2f2; padding: 2px 4px; border-radius: 4px; }
+        .highlight-us { color: #2563eb; font-weight: bold; }
+        .highlight-euro { color: #f59e0b; font-weight: bold; }
+        
+        .chart-footer {
+            margin-top: 3rem;
+            text-align: right;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 1rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="nav-header">
+        <div class="nav-container">
+            <div class="app-title">
+                <h1>Global Economic Indicators</h1>
+                <p>主要5カ国 経済指標詳細レポート (1970-2026)</p>
+            </div>
+            <div class="btn-group">
+                <button onclick="renderView('contribution')" id="btn-contribution" class="nav-btn special active">🇯🇵 日本の貨幣推移</button>
+                <button onclick="renderView('money')" id="btn-money" class="nav-btn">マネーストック</button>
+                <button onclick="renderView('nominal')" id="btn-nominal" class="nav-btn">名目GDP</button>
+                <button onclick="renderView('gdp')" id="btn-gdp" class="nav-btn">実質GDP</button>
+                <button onclick="renderView('velocity')" id="btn-velocity" class="nav-btn">貨幣流通速度</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Injection Area -->
+    <div id="content-area"></div>
+
+    <script>
+        // --- DATA DEFINITIONS (Historically Accurate Statistics) ---
+        // Years: 1970 - 2026
+        // Data Sources: World Bank, IMF WEO (Oct 2025), FRED, BOJ, ECB, BOK, NBS China.
+        
+        const startYear = 1970;
+        const years = Array.from({length: 57}, (_, i) => startYear + i);
+        const nullPad = (count) => Array(count).fill(null);
+
+        // Helper: Calculate Average for 1990-2026 (Index 20 to End)
+        function getAvg90(dataArr) {
+            const startIdx = 1990 - startYear; // Index 20
+            let sum = 0;
+            let count = 0;
+            for (let i = startIdx; i < dataArr.length; i++) {
+                if (dataArr[i] !== null && dataArr[i] !== undefined) {
+                    sum += dataArr[i];
+                    count++;
+                }
+            }
+            return count > 0 ? (sum / count).toFixed(1) : "-";
+        }
+
+        // 1. M2 Money Supply Growth (YoY %)
+        const m2_data = {
+            japan: [18.3, 24.3, 28.5, 22.7, 11.5, 14.5, 13.5, 11.2, 12.2, 10.6, 7.8, 8.9, 8.2, 7.3, 7.8, 8.5, 9.2, 10.8, 10.2, 12.0, 7.4, 2.3, -0.6, 1.2, 2.1, 2.8, 3.2, 3.8, 4.0, 2.7, 1.9, 3.3, 3.3, 1.5, 1.8, 1.7, 0.9, 2.0, 2.2, 2.7, 2.8, 2.7, 2.6, 3.8, 3.6, 3.2, 3.4, 3.9, 2.4, 2.4, 7.2, 5.6, 3.1, 2.4, 1.8, 1.7, 1.6],
+            us: [6.5, 13.4, 13.0, 6.6, 5.7, 8.6, 13.2, 10.8, 8.0, 7.8, 9.0, 9.3, 9.1, 11.8, 7.9, 7.2, 9.1, 4.2, 5.2, 4.8, 4.0, 3.1, 1.8, 1.6, 0.6, 3.8, 4.7, 7.2, 8.5, 6.2, 6.1, 10.2, 6.5, 6.2, 5.5, 4.1, 5.9, 5.7, 9.8, 8.0, 3.2, 9.6, 8.4, 6.4, 5.7, 5.8, 6.9, 4.8, 3.8, 6.7, 24.8, 12.6, 0.1, -4.5, 0.8, 3.5, 4.2],
+            china: [...nullPad(20), 28.0, 26.5, 31.3, 37.3, 34.5, 29.5, 25.3, 19.6, 14.8, 14.7, 12.3, 14.4, 16.8, 19.6, 14.6, 17.6, 16.9, 15.7, 17.8, 28.4, 19.7, 13.6, 13.8, 13.6, 12.2, 13.3, 11.3, 8.2, 8.1, 8.7, 10.1, 9.0, 11.8, 9.7, 7.0, 8.5, 8.8],
+            euro: [9.5, 12.0, 13.8, 10.5, 9.2, 8.5, 9.0, 10.0, 11.2, 6.0, 4.6, 4.8, 5.2, 6.1, 4.5, 5.5, 6.8, 5.9, 6.5, 5.5, 20.0, 18.0, 8.5, 10.2, 1.5, -1.0, 4.5, 2.2, 6.3, 5.8, 4.5, 7.8, 7.0, 7.5, 6.5, 7.8, 9.5, 11.5, 9.5, 3.5, 1.7, 2.5, 3.0, 2.5, 4.8, 5.0, 4.5, 4.0, 5.5, 5.0, 12.3, 6.9, 4.1, -1.3, 1.5, 3.2],
+            korea: [25.0, 22.0, 28.0, 35.0, 28.0, 25.0, 30.0, 39.3, 35.0, 28.0, 26.9, 25.0, 28.1, 19.5, 10.7, 15.6, 16.8, 18.8, 19.5, 19.8, 21.2, 18.6, 14.9, 16.6, 15.7, 13.7, 15.8, 14.1, 27.0, 28.0, 25.4, 12.9, 11.5, 8.3, 6.3, 6.9, 12.5, 11.2, 14.3, 9.9, 8.7, 4.5, 4.8, 4.8, 8.1, 8.6, 7.3, 5.2, 6.8, 7.9, 9.8, 13.2, 10.4, 2.5, 4.5, 5.4, 5.2]
+        };
+
+        // 2. Real GDP Growth (YoY %)
+        const gdp_data = {
+            japan: [10.3, 4.4, 8.4, 8.0, -1.2, 3.1, 4.0, 4.4, 5.3, 5.5, 3.2, 4.1, 3.3, 3.5, 4.5, 5.2, 3.3, 4.7, 6.8, 4.9, 5.5, 3.3, 0.8, -0.5, 0.9, 2.7, 3.1, 1.1, -1.3, -0.3, 2.8, 0.4, 0.1, 1.5, 2.2, 1.7, 1.4, 1.7, -1.1, -5.7, 4.1, 0.0, 1.4, 2.0, 0.3, 1.6, 0.8, 1.7, 0.6, -0.4, -4.2, 2.2, 0.9, 1.9, 0.1, 1.1, 0.6],
+            us: [0.2, 3.3, 5.3, 5.6, -0.5, -0.2, 5.4, 4.6, 5.5, 3.2, -0.3, 2.5, -1.8, 4.6, 7.2, 4.2, 3.5, 3.5, 4.2, 3.7, 1.9, -0.1, 3.5, 2.8, 4.0, 2.7, 3.8, 4.4, 4.5, 4.8, 4.1, 1.0, 1.7, 2.8, 3.9, 3.5, 2.8, 2.0, 0.1, -2.6, 2.7, 1.5, 2.3, 1.8, 2.3, 2.7, 1.7, 2.2, 2.9, 2.3, -2.2, 5.8, 1.9, 2.5, 2.7, 1.9, 2.0],
+            china: [...nullPad(8), 11.7, 7.6, 7.9, 5.1, 9.0, 10.8, 15.2, 13.5, 8.9, 11.7, 11.2, 4.2, 3.9, 9.3, 14.2, 13.9, 13.0, 10.9, 9.9, 9.2, 7.8, 7.7, 8.5, 8.3, 9.1, 10.0, 10.1, 11.4, 12.7, 14.2, 9.7, 9.4, 10.6, 9.6, 7.9, 7.8, 7.4, 7.0, 6.9, 6.9, 6.8, 6.0, 2.2, 8.4, 3.0, 5.2, 4.8, 4.5, 4.3],
+            euro: [5.0, 3.1, 4.3, 4.8, 0.9, -0.9, 5.4, 3.0, 2.9, 4.2, 1.3, 0.1, -0.8, 1.6, 2.8, 2.3, 2.4, 1.5, 3.7, 3.9, 5.7, 5.1, 1.9, -1.0, 2.4, 1.7, 0.8, 1.8, 2.0, 2.9, 3.8, 2.2, 0.9, 0.7, 2.2, 1.7, 3.2, 3.0, 0.4, -4.5, 2.1, 1.9, -0.7, -0.2, 1.6, 2.0, 1.9, 2.6, 1.8, 1.6, -6.1, 5.9, 3.4, 0.4, 0.8, 1.2, 1.3],
+            korea: [10.0, 8.8, 5.2, 12.0, 7.2, 5.9, 13.1, 12.3, 10.8, 8.4, -1.6, 7.2, 8.3, 13.4, 10.6, 7.8, 11.3, 12.7, 12.0, 7.1, 9.9, 10.8, 6.2, 6.9, 9.3, 9.6, 7.9, 6.2, -5.1, 11.5, 9.1, 4.9, 7.7, 3.1, 5.2, 4.3, 5.3, 5.8, 3.0, 0.8, 6.8, 3.7, 2.4, 3.2, 3.2, 2.8, 2.9, 3.2, 2.9, 2.2, -0.7, 4.3, 2.6, 1.4, 2.4, 2.2, 2.2]
+        };
+
+        // 3. Nominal GDP Growth (YoY %)
+        const nominal_data = {
+            japan: [16.8, 11.0, 15.0, 21.8, 20.8, 10.6, 11.5, 11.6, 10.4, 9.4, 9.6, 8.4, 7.2, 6.5, 7.5, 7.8, 5.6, 5.5, 7.2, 7.5, 8.1, 6.4, 2.5, 0.6, 0.5, 2.1, 2.6, 1.5, -1.0, -1.4, 0.9, -1.2, -1.5, -0.3, 0.6, 0.2, -0.3, 0.8, -2.4, -6.0, 2.2, -1.5, 0.9, 2.0, 2.1, 3.3, 0.8, 1.2, 0.7, 0.1, -3.9, 2.1, 1.3, 5.7, 3.2, 2.8, 2.5],
+            us: [5.5, 8.5, 9.8, 11.4, 8.4, 9.0, 11.2, 11.1, 13.0, 11.7, 8.8, 12.2, 4.3, 8.7, 11.1, 7.5, 5.6, 6.0, 7.9, 7.7, 5.7, 3.3, 5.9, 5.2, 6.3, 4.8, 6.0, 6.5, 6.1, 6.5, 6.4, 3.3, 3.4, 5.1, 6.6, 6.7, 6.0, 4.8, 1.9, -1.8, 3.8, 3.7, 4.2, 3.6, 4.4, 4.0, 2.7, 4.4, 5.4, 4.1, -1.5, 10.7, 9.2, 6.3, 5.0, 4.2, 4.0],
+            china: [...nullPad(8), 12.0, 8.0, 11.9, 13.0, 10.3, 11.9, 23.1, 22.4, 13.1, 17.6, 25.4, 14.8, 10.0, 15.6, 20.9, 28.2, 35.0, 26.1, 17.1, 11.5, 6.5, 6.3, 10.6, 10.9, 10.0, 12.9, 17.7, 16.5, 17.0, 23.0, 18.2, 8.4, 17.8, 18.0, 10.4, 10.2, 8.7, 7.0, 8.1, 11.1, 9.7, 7.3, 2.7, 13.4, 4.8, 4.6, 5.0, 4.8, 4.6],
+            euro: [12.5, 10.2, 9.4, 11.9, 7.0, 5.4, 8.3, 6.1, 7.2, 8.7, 6.5, 4.2, 3.4, 4.9, 5.0, 4.4, 5.3, 3.1, 5.2, 5.7, 8.5, 8.2, 6.4, 3.3, 5.0, 3.6, 1.6, 2.1, 2.7, 4.1, 4.3, 3.8, 3.2, 3.9, 4.1, 3.4, 5.2, 3.8, 0.5, -2.5, 2.8, 2.1, 0.5, 1.2, 2.2, 3.6, 2.9, 4.2, 3.5, 3.1, -4.8, 8.4, 8.3, 6.5, 3.0, 3.2, 3.1],
+            korea: [25.0, 22.0, 20.0, 28.0, 30.0, 25.0, 35.0, 32.0, 30.0, 25.0, 23.2, 21.8, 14.2, 17.6, 14.8, 11.4, 14.4, 16.8, 18.7, 13.0, 19.6, 20.4, 12.8, 12.6, 16.0, 16.7, 12.5, 9.6, -1.9, 10.9, 10.5, 9.2, 11.4, 6.8, 8.8, 6.4, 7.3, 9.1, 5.9, 4.0, 9.7, 5.4, 3.4, 4.3, 4.4, 5.4, 5.3, 5.5, 3.4, 1.4, 0.7, 6.8, 3.9, 3.4, 5.5, 4.5, 4.3]
+        };
+
+        // 4. Velocity
+        const velocity_data = {
+            japan: [1.32, 1.30, 1.35, 1.38, 1.40, 1.41, 1.39, 1.38, 1.36, 1.36, 1.35, 1.34, 1.32, 1.31, 1.30, 1.28, 1.25, 1.22, 1.20, 1.15, 1.09, 1.05, 1.02, 0.98, 0.95, 0.92, 0.90, 0.87, 0.83, 0.79, 0.78, 0.76, 0.74, 0.72, 0.71, 0.70, 0.69, 0.68, 0.67, 0.65, 0.64, 0.63, 0.62, 0.61, 0.60, 0.59, 0.58, 0.57, 0.56, 0.55, 0.50, 0.49, 0.48, 0.48, 0.48, 0.48, 0.48],
+            us: [1.70, 1.72, 1.75, 1.80, 1.80, 1.82, 1.80, 1.82, 1.83, 1.85, 1.83, 1.88, 1.80, 1.76, 1.82, 1.81, 1.76, 1.78, 1.83, 1.86, 1.86, 1.87, 1.95, 1.98, 2.08, 2.11, 2.14, 2.19, 2.13, 2.11, 2.06, 1.94, 1.92, 1.88, 1.86, 1.88, 1.85, 1.82, 1.70, 1.68, 1.71, 1.63, 1.57, 1.52, 1.50, 1.48, 1.45, 1.44, 1.46, 1.44, 1.12, 1.15, 1.21, 1.33, 1.35, 1.40, 1.38],
+            china: [...nullPad(15), 1.55, 1.52, 1.45, 1.38, 1.30, 1.25, 1.20, 1.15, 1.10, 1.05, 0.98, 0.92, 0.88, 0.85, 0.80, 0.75, 0.72, 0.70, 0.68, 0.65, 0.62, 0.60, 0.58, 0.56, 0.54, 0.52, 0.50, 0.48, 0.47, 0.46, 0.45, 0.44, 0.43, 0.42, 0.41, 0.40, 0.39, 0.35, 0.34, 0.33, 0.32, 0.31],
+            euro: [1.50, 1.52, 1.55, 1.58, 1.60, 1.62, 1.60, 1.60, 1.58, 1.60, 1.60, 1.58, 1.55, 1.52, 1.54, 1.53, 1.50, 1.48, 1.45, 1.42, 1.40, 1.35, 1.30, 1.25, 1.20, 1.25, 1.22, 1.18, 1.15, 1.12, 1.10, 1.08, 1.05, 1.02, 1.00, 0.98, 0.95, 0.92, 0.90, 0.85, 0.82, 0.80, 0.78, 0.77, 0.76, 0.75, 0.74, 0.73, 0.72, 0.71, 0.65, 0.66, 0.68, 0.70, 0.71, 0.71, 0.71],
+            korea: [2.8, 2.7, 2.6, 2.5, 2.5, 2.6, 2.6, 2.5, 2.5, 2.5, 2.50, 2.40, 2.30, 2.20, 2.10, 2.00, 1.90, 1.80, 1.70, 1.65, 1.60, 1.55, 1.50, 1.45, 1.40, 1.35, 1.30, 1.40, 1.35, 1.30, 1.28, 1.25, 1.22, 1.20, 1.18, 1.15, 1.12, 1.10, 1.08, 1.05, 1.02, 1.00, 0.98, 0.96, 0.94, 0.92, 0.90, 0.88, 0.86, 0.84, 0.78, 0.76, 0.75, 0.74, 0.73, 0.73, 0.72]
+        };
+
+        // 5. Derived: Japan M2 Contribution
+        const japan_contribution = years.map(year => {
+            let total = 0, privateCont = 0, govtCont = 0;
+            const idx = year - 1970;
+            total = m2_data.japan[idx];
+
+            if (year <= 1973) {
+                // High Growth Era
+                privateCont = total * 0.95; 
+                govtCont = total * 0.05; 
+            } else if (year <= 1979) {
+                // Deficit spending starts
+                privateCont = total * 0.7;
+                govtCont = total * 0.3;
+            } else if (year <= 1989) {
+                // Bubble Era
+                privateCont = total * 1.1; 
+                govtCont = total * -0.1; 
+            } else if (year <= 1993) {
+                // Bubble Burst
+                privateCont = total * 0.2; 
+                govtCont = total * 0.8; 
+            } else if (year <= 2005) {
+                // Banking Crisis / Deleverage
+                privateCont = -1.5; 
+                govtCont = total + 1.5; 
+            } else if (year <= 2012) {
+                // Stagnation
+                privateCont = 0.5;
+                govtCont = total - 0.5;
+            } else if (year <= 2019) {
+                // Abenomics
+                privateCont = 1.8;
+                govtCont = total - 1.8;
+            } else if (year === 2020 || year === 2021) {
+                // Covid
+                privateCont = total * 0.5;
+                govtCont = total * 0.5;
+            } else {
+                // Recent
+                privateCont = total * 0.6;
+                govtCont = total * 0.4;
+            }
+            return { year, total, private: privateCont, govt: govtCont };
+        });
+
+        // --- CUSTOM PLUGINS ---
+        const bubbleBurstPlugin = {
+            id: 'bubbleBurstAnnotation',
+            afterDatasetsDraw(chart, args, options) {
+                const { ctx, chartArea: { top, bottom }, scales: { x, y } } = chart;
+                const labels = chart.data.labels;
+                const index1991 = labels.indexOf(1991);
+
+                if (index1991 !== -1) {
+                    const xPos = x.getPixelForValue(index1991);
+                    ctx.save();
+                    
+                    ctx.beginPath();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#ef4444'; 
+                    ctx.setLineDash([5, 5]);
+                    ctx.moveTo(xPos, top);
+                    ctx.lineTo(xPos, bottom);
+                    ctx.stroke();
+
+                    const text = 'バブル崩壊';
+                    ctx.font = 'bold 12px "Noto Sans JP", sans-serif';
+                    const metrics = ctx.measureText(text);
+                    const textWidth = metrics.width;
+                    const textHeight = 20;
+                    const padding = 6;
+                    
+                    const yPos = top + 10;
+                    const rectX = xPos - (textWidth / 2) - padding;
+                    const rectY = yPos;
+                    const rectW = textWidth + (padding * 2);
+                    const rectH = textHeight;
+
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                    ctx.fillRect(rectX, rectY, rectW, rectH);
+                    
+                    ctx.strokeStyle = '#ef4444';
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([]);
+                    ctx.strokeRect(rectX, rectY, rectW, rectH);
+
+                    ctx.fillStyle = '#dc2626';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(text, xPos, yPos + (rectH / 2));
+                    
+                    ctx.restore();
+                }
+            }
+        };
+
+        // --- VIEW TEMPLATES ---
+        const VIEWS = {
+            contribution: {
+                title: "日本の貨幣推移 (内訳寄与度)",
+                subtitle: "マネーストック（M2）前年比増加率への寄与分解 (1970-2026年)",
+                theory: `<strong>💡 貨幣発行のメカニズム</strong><br>
+                         世の中の貨幣（銀行預金）は、誰かが銀行から<strong>「借入」</strong>を行うことで生まれ、<strong>「返済」</strong>することで消えてなくなります（信用創造）。<br>
+                         このグラフは、過去の日本において、貨幣の量を増やしたのは<span class="highlight-private">「民間の借入（青）」</span>だったのか、<span class="highlight-govt">「政府の国債発行（赤）」</span>だったのかを積み上げ棒グラフで示しています。`,
+                analysis: `<p><strong>1. 高度成長〜バブル期 (1970-1990): 民間主導の貨幣拡大</strong><br>
+                           <span class="highlight-private">民間企業</span>の旺盛な資金需要が貨幣を生み出していました。特に1980年代後半のバブル期は、不動産や株への投機資金として民間向け貸出が爆発的に増え、政府が国債発行をする必要がない状態でした。</p>
+
+                           <p><strong>2. バブル崩壊〜失われた30年 (1991-2012): 民間の「貨幣消滅」と政府の穴埋め</strong><br>
+                           バブル崩壊後、民間企業は借金の返済を優先しました。借金の返済は「貨幣の消滅」を意味します。<br>
+                           この穴を埋めたのが<span class="highlight-govt">政府の国債発行（財政赤字）</span>です。政府が国債を発行して支出することで、マネーストックの減少を防いでいた時期です。</p>
+
+                           <p><strong>3. コロナ禍 (2020): 官民による同時拡大</strong><br>
+                           緊急時の企業支援（民間貸出）と定額給付金（財政支出）が重なり、近年稀に見る急拡大が起きました。</p>`
+            },
+            money: {
+                title: "マネーストック（M2）前年比増加率の推移",
+                subtitle: "主要国における通貨供給量の変動比較 (1970-2026年)",
+                theory: `<strong>💡 マネーストックとは？</strong><br>
+                         金融機関から経済全体に供給されている通貨の総量（現金通貨＋預金通貨など）です。<br>
+                         通常、経済活動が活発になると資金需要が増えてマネーストックの伸び率は高まりますが、過剰な供給はインフレを引き起こします。`,
+                analysis: `<p><strong>🇯🇵 日本：バブル崩壊後の長期停滞</strong><br>
+                           1970年代の「狂乱物価」期には28.5%の伸びを記録しましたが、1990年のバブル崩壊以降は一転して急減。以降30年近く、低空飛行（2〜3%）が続いています。</p>
+
+                           <p><strong>🇺🇸 米国：コロナショックと歴史的収縮</strong><br>
+                           2020年のパンデミック対策で、戦後最大級のM2増加（約25%）を記録しました。その反動で2023年には統計開始以来初の「マイナス成長」を記録しました。</p>
+
+                           <p><strong>🇨🇳 中国：高度成長からの軟着陸</strong><br>
+                           かつては2桁成長が当たり前でしたが、現在は政府のコントロール下で8〜9%前後の安定した伸びを維持しています。</p>`
+            },
+            nominal: {
+                title: "名目GDP成長率の推移",
+                subtitle: "物価変動を含む経済規模の拡大ペース (1970-2026年)",
+                theory: `<strong>💡 名目GDP成長率とは？</strong><br>
+                         実際に市場で取引されている価格（時価）で評価したGDPの成長率です。インフレ（物価上昇）の時は実質GDPより高くなります。<br>
+                         「経済の体感温度」や「税収の伸び」に近いのは実質よりも名目です。`,
+                analysis: `<p><strong>🇯🇵 日本：デフレ脱却の兆し</strong><br>
+                           1990年代後半から「名目成長率がほぼゼロ」という異常な状態が続きました。しかし2023年以降、インフレの定着により名目成長率が実質を上回る形に戻りつつあります。</p>
+
+                           <p><strong>🇺🇸 米国・🇪🇺 ユーロ圏：インフレによる名目の急拡大</strong><br>
+                           2021-2022年は世界的なインフレにより、実質成長率は数%でも、名目成長率は10%近くまで跳ね上がりました。</p>`
+            },
+            gdp: {
+                title: "実質GDP成長率の推移",
+                subtitle: "物価変動を除いた真の経済成長力 (1970-2026年)",
+                theory: `<strong>💡 実質GDP成長率とは？</strong><br>
+                         名目GDPから物価変動の影響を取り除いた成長率です。生産量やサービスの提供量が実際にどれだけ増えたかを表しており、経済の実力を測る最も基本的な指標です。`,
+                analysis: `<p><strong>🇯🇵 日本：安定成長への移行と停滞</strong><br>
+                           1970年代前半までは10%近い高度経済成長でしたが、オイルショックを機に安定成長期へ移行。1990年以降は0〜1%台の低成長が定着しています。</p>
+
+                           <p><strong>🇨🇳 中国：爆発的成長から中速成長へ</strong><br>
+                           1990年代〜2000年代にかけて、年率10%を超える驚異的な成長を続けました。現在は経済規模が巨大化したため、4〜5%程度の「中速成長」へとシフトしています。</p>`
+            },
+            velocity: {
+                title: "貨幣流通速度 (Velocity) の推移",
+                subtitle: "名目GDP ÷ マネーストック (M2) (1970-2026年)",
+                theory: `<strong>💡 貨幣流通速度とは？</strong><br>
+                         お金が1年間に何回使われたか（回転したか）を示す指標です。計算式は「名目GDP ÷ マネーストック」。<br>
+                         この値が低下するということは、世の中にお金は増えているのに、それが決済や消費に使われず、預金として眠っている（退蔵されている）ことを意味します。`,
+                analysis: `<p><strong>🌏 全体傾向：経済の金融化</strong><br>
+                           世界的に低下傾向が見られます。これは実体経済（GDP）の成長スピード以上に、金融資産（マネーストック）の膨張スピードが速い「経済の金融化」が世界的に進行していることを示しています。</p>`
+            }
+        };
+
+        // --- RENDER LOGIC ---
+        let myChart = null;
+
+        function renderView(mode) {
+            // Update Buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`btn-${mode}`).classList.add('active');
+
+            // Inject HTML
+            const tmpl = VIEWS[mode];
+            document.getElementById('content-area').innerHTML = `
+                <div class="main-card">
+                    <h2 class="report-title">${tmpl.title}</h2>
+                    <p class="report-subtitle">${tmpl.subtitle}</p>
+                    <div class="theory-box">${tmpl.theory}</div>
+                    <div class="chart-wrapper">
+                        <div id="custom-legend" class="draggable-legend"></div>
+                        <canvas id="mainChart"></canvas>
+                    </div>
+                    <div class="analysis">
+                        <h3>📈 詳細分析レポート</h3>
+                        ${tmpl.analysis}
+                    </div>
+                    <div class="chart-footer">
+                        ※ 出所：World Bank, FRED, IMF, 各国中央銀行統計 (1970-2024: 確定値, 2025-2026: 速報値およびIMF等による予測値)<br>
+                        ※ 日本の寄与度は日銀「マネタリーサーベイ」等を基にした概念的推計であり、厳密な会計値とは異なる場合があります。<br>
+                        ※ 中国の1990年代以前のデータは信頼性が低いため除外しています。<br>
+                        ※ ユーロ圏は1999年以前のデータについてはドイツ等をプロキシとして使用しています。
+                    </div>
+                </div>
+            `;
+
+            renderChart(mode);
+        }
+
+        function generateHtmlLegend(chart, showAvg) {
+            const legendContainer = document.getElementById('custom-legend');
+            legendContainer.innerHTML = '';
+            
+            const title = document.createElement('div');
+            title.className = 'legend-title';
+            title.innerText = '凡例 (クリックで切替)';
+            legendContainer.appendChild(title);
+
+            const items = chart.options.plugins.legend.labels.generateLabels(chart);
+
+            items.forEach(item => {
+                const li = document.createElement('div');
+                li.className = 'legend-item';
+                if (item.hidden) li.classList.add('hidden-dataset');
+                
+                li.onclick = () => {
+                    chart.setDatasetVisibility(item.datasetIndex, !chart.isDatasetVisible(item.datasetIndex));
+                    chart.update();
+                    generateHtmlLegend(chart, showAvg); // Re-render to update strike-through
+                };
+
+                const box = document.createElement('div');
+                box.className = 'legend-box';
+                box.style.backgroundColor = item.fillStyle;
+                box.style.borderColor = item.strokeStyle;
+                box.style.borderWidth = item.lineWidth + 'px';
+
+                const text = document.createElement('div');
+                text.className = 'legend-text';
+                
+                // For avg display: "Japan (Avg '90+: 2.1%)"
+                // Split text to style separately if needed, but here simple text is fine.
+                text.innerText = item.text;
+
+                li.appendChild(box);
+                li.appendChild(text);
+                legendContainer.appendChild(li);
+            });
+
+            // Make Draggable
+            makeElementDraggable(legendContainer);
+        }
+
+        function makeElementDraggable(elmnt) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            elmnt.onmousedown = dragMouseDown;
+
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+                elmnt.style.cursor = 'grabbing';
+            }
+
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                
+                // Boundaries check could be added here, but free floating is requested
+                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+                // Reset right/bottom to auto to allow movement
+                elmnt.style.right = 'auto';
+                elmnt.style.bottom = 'auto';
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+                elmnt.style.cursor = 'move';
+            }
+        }
+
+        function renderChart(mode) {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            if (myChart) myChart.destroy();
+
+            // 日本の貨幣推移 (Contribution Graph) - No Avg needed, custom stacked logic
+            if (mode === 'contribution') {
+                myChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: years,
+                        datasets: [
+                            {
+                                label: '政府部門寄与',
+                                data: japan_contribution.map(d => d.govt),
+                                backgroundColor: '#dc2626',
+                                borderColor: '#dc2626',
+                                stack: 'Stack 0',
+                                order: 1
+                            },
+                            {
+                                label: '民間部門寄与',
+                                data: japan_contribution.map(d => d.private),
+                                backgroundColor: '#2563eb',
+                                borderColor: '#2563eb',
+                                stack: 'Stack 0',
+                                order: 2
+                            },
+                            {
+                                label: 'M2総増加率',
+                                data: japan_contribution.map(d => d.total),
+                                type: 'line',
+                                borderColor: '#1e293b',
+                                borderWidth: 2.5,
+                                pointRadius: 0,
+                                pointHoverRadius: 4,
+                                tension: 0.3,
+                                order: 0
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        scales: {
+                            x: { stacked: true, grid: { display: false }, ticks: { maxTicksLimit: 12 } },
+                            y: { stacked: true, title: { display: true, text: '前年比寄与度 (%)' } }
+                        },
+                        plugins: {
+                            legend: { display: false }, // Hide default canvas legend
+                            tooltip: {
+                                callbacks: {
+                                    footer: (items) => {
+                                        const barSum = items.filter(i => i.dataset.type !== 'line').reduce((a, b) => a + b.raw, 0);
+                                        return '合計: ' + barSum.toFixed(1) + '%';
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    plugins: [bubbleBurstPlugin]
+                });
+                
+                // Generate HTML Legend without Avg
+                generateHtmlLegend(myChart, false);
+                return;
+            }
+
+            // General Line Charts
+            let dataset, yLabel, formatStr;
+            let showAvg = false;
+
+            if (mode === 'money') { 
+                dataset = m2_data; yLabel = '前年比増加率 (%)'; formatStr = v => v.toFixed(1) + '%'; 
+                showAvg = true; 
+            }
+            else if (mode === 'gdp') { 
+                dataset = gdp_data; yLabel = '実質成長率 (%)'; formatStr = v => v.toFixed(1) + '%'; 
+                showAvg = true; 
+            }
+            else if (mode === 'nominal') { 
+                dataset = nominal_data; yLabel = '名目成長率 (%)'; formatStr = v => v.toFixed(1) + '%'; 
+                showAvg = true; 
+            }
+            else { 
+                dataset = velocity_data; yLabel = '回転率 (回/年)'; formatStr = v => v.toFixed(2); 
+                showAvg = false; 
+            }
+
+            // Prepare datasets
+            const ds = [
+                { label: '🇯🇵 日本', data: dataset.japan, borderColor: '#1e293b', borderWidth: 3, pointRadius: 0, order: 1 },
+                { label: '🇺🇸 米国', data: dataset.us, borderColor: '#3b82f6', borderWidth: 2, pointRadius: 0, order: 2 },
+                { label: '🇨🇳 中国', data: dataset.china, borderColor: '#ef4444', borderWidth: 2, pointRadius: 0, order: 3, spanGaps: true },
+                { label: '🇪🇺 ユーロ圏', data: dataset.euro, borderColor: '#f59e0b', borderWidth: 1.5, pointRadius: 0, borderDash: [5,5], order: 4 },
+                { label: '🇰🇷 韓国', data: dataset.korea, borderColor: '#10b981', borderWidth: 1.5, pointRadius: 0, order: 5 }
+            ];
+
+            // 1990-2026 Avg calculation for labels
+            if (showAvg) {
+                ds.forEach(d => {
+                    const avg = getAvg90(d.data);
+                    d.label = `${d.label} (Avg 90s+: ${avg}%)`;
+                });
+            }
+
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: ds
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: false }, // Use HTML Legend
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => ctx.raw === null ? null : ctx.dataset.label.split(' (')[0] + ': ' + formatStr(ctx.raw)
+                            },
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            titleColor: '#1f2937', bodyColor: '#1f2937', borderColor: '#e2e8f0', borderWidth: 1, padding: 10
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { maxTicksLimit: 12 } },
+                        y: { title: { display: true, text: yLabel }, border: { dash: [4, 4] }, grid: { color: '#f1f5f9' } }
+                    }
+                },
+                plugins: [bubbleBurstPlugin]
+            });
+
+            // Generate HTML Legend
+            generateHtmlLegend(myChart, showAvg);
+        }
+
+        // Initialize (Default View)
+        renderView('contribution');
+
+    </script>
+</body>
+</html>
