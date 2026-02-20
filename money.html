@@ -589,27 +589,25 @@
                         labels: years,
                         datasets: [
                             {
-                                label: '政府部門寄与',
+                                label: '政府部門寄与 (国債発行等)',
                                 data: japan_contribution.map(d => d.govt),
                                 backgroundColor: '#dc2626',
-                                borderColor: '#dc2626',
                                 stack: 'Stack 0',
                                 order: 1
                             },
                             {
-                                label: '民間部門寄与',
+                                label: '民間部門寄与 (貸出・社債等)',
                                 data: japan_contribution.map(d => d.private),
                                 backgroundColor: '#2563eb',
-                                borderColor: '#2563eb',
                                 stack: 'Stack 0',
                                 order: 2
                             },
                             {
-                                label: 'M2総増加率',
+                                label: 'M2総増加率 (Line)',
                                 data: japan_contribution.map(d => d.total),
                                 type: 'line',
-                                borderColor: '#1e293b',
-                                borderWidth: 2.5,
+                                borderColor: '#000000',
+                                borderWidth: 4,
                                 pointRadius: 0,
                                 pointHoverRadius: 4,
                                 tension: 0.3,
@@ -668,7 +666,7 @@
 
             // Prepare datasets
             const ds = [
-                { label: '🇯🇵 日本', data: dataset.japan, borderColor: '#1e293b', borderWidth: 3, pointRadius: 0, order: 1 },
+                { label: '🇯🇵 日本', data: dataset.japan, borderColor: '#000000', borderWidth: 4, pointRadius: 0, order: 0 },
                 { label: '🇺🇸 米国', data: dataset.us, borderColor: '#3b82f6', borderWidth: 2, pointRadius: 0, order: 2 },
                 { label: '🇨🇳 中国', data: dataset.china, borderColor: '#ef4444', borderWidth: 2, pointRadius: 0, order: 3, spanGaps: true },
                 { label: '🇪🇺 ユーロ圏', data: dataset.euro, borderColor: '#f59e0b', borderWidth: 1.5, pointRadius: 0, borderDash: [5,5], order: 4 },
