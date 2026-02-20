@@ -576,6 +576,7 @@
             display: flex; justify-content: center; 
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             z-index: 50; flex-shrink: 0;
+            transition: all 0.5s;
         }
         
         #micro-view .back-btn {
@@ -736,7 +737,12 @@
         body.deposit-focus-mode { background-color: #222; }
         body.deposit-focus-mode #micro-view { background: #222; }
         
-        body.deposit-focus-mode #micro-view .header,
+        body.deposit-focus-mode #micro-view .header {
+            background: rgba(34, 34, 34, 0.95);
+            border-bottom-color: rgba(255, 255, 255, 0.05);
+        }
+
+        body.deposit-focus-mode #micro-header-left,
         body.deposit-focus-mode #micro-view .control-panel,
         body.deposit-focus-mode .mc-header,
         body.deposit-focus-mode .mc-col-hdr,
@@ -767,8 +773,10 @@
         }
         
         body.deposit-focus-mode #btn-deposit-focus {
-            box-shadow: 0 0 15px #64748b;
+            box-shadow: 0 0 15px var(--money-color);
             transform: scale(1.1);
+            position: relative;
+            z-index: 100;
         }
 
         /* Responsive UI adjustments for Mobile to mimic PC layout */
@@ -992,9 +1000,9 @@
     <div id="micro-view" class="view-container view-hidden">
         <header class="header">
             <div class="micro-layout-row">
-                <div style="display: flex; gap:12px; align-items: center; justify-content: flex-start; flex: 1;">
+                <div id="micro-header-left" style="display: flex; gap:12px; align-items: center; justify-content: flex-start; flex: 1;">
                     <button class="back-btn" id="btn-back-macro">⬅ 全体図へ戻る</button>
-                    <div style="font-weight: 800; white-space: nowrap; font-size: 1.1rem;">金融調節</div>
+                    <div style="font-weight: 800; white-space: nowrap; font-size: 1.1rem; transition: color 0.5s;">金融調節</div>
                 </div>
                 
                 <div class="micro-stats">
