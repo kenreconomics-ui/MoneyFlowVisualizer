@@ -871,8 +871,8 @@
                         <span id="private-net-display" style="color: var(--asset-color)">0兆円</span>
                     </div>
                     <button class="btn-japan" id="btn-japan">🇯🇵 現状</button>
-                    <button class="btn-debt" id="btn-debt-focus">😱 政府の負債</button>
-                    <button class="btn-money" id="btn-money-focus">💰 民間の貨幣</button>
+                    <button class="btn-debt" id="btn-debt-focus">😱 政府負債</button>
+                    <button class="btn-money" id="btn-money-focus">💰 民間貨幣</button>
                     <button class="btn-reset" id="reset-btn">リセット</button>
                 </div>
             </div>
@@ -1006,7 +1006,7 @@
                 </div>
                 
                 <div class="micro-stats">
-                    <button class="btn-money" id="btn-deposit-focus" style="margin-right: 12px; font-size: 0.95rem; padding: 12px 24px; border-radius: 12px;">💰 民間貨幣</button>
+                    <button class="btn-money" id="btn-deposit-focus" style="margin-right: 12px; font-size: 0.95rem; padding: 12px 24px; border-radius: 12px;">💰 民間銀行貨幣</button>
 
                     <div class="m-stat-box" style="align-items: center; min-width: 90px;">
                         <div class="gauge-container">
@@ -1470,7 +1470,7 @@
                 container.innerHTML = `
                      <iframe src="money.html" style="flex:1; width:100%; border:none;"></iframe>
                      <div style="text-align:center; padding: 10px; background: #fff; border-top: 1px solid #eee;">
-                        <small style="color:#64748b; font-weight:bold;">※「民間の貨幣」ボタンをもう一度押すと元の画面に戻ります</small>
+                        <small style="color:#64748b; font-weight:bold;">※「民間貨幣」ボタンをもう一度押すと元の画面に戻ります</small>
                      </div>
                 `;
                 document.getElementById('macro-view').appendChild(container);
