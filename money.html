@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>主要5カ国 経済指標詳細レポート  (1970-2026)</title>
+    <title>主要5カ国 経済指標詳細レポート (1970-2026)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -769,13 +769,14 @@
         });
 
         // --- CUSTOM PLUGINS ---
-        const bubbleBurstPlugin = {
-            id: 'bubbleBurstAnnotation',
+        const customAnnotationsPlugin = {
+            id: 'customAnnotations',
             afterDatasetsDraw(chart, args, options) {
                 const { ctx, chartArea: { top, bottom }, scales: { x } } = chart;
                 const labels = chart.data.labels;
+                
+                // 1. バブル崩壊 (1991年)
                 const index1991 = labels.indexOf(1991);
-
                 if (index1991 !== -1) {
                     const xPos = x.getPixelForValue(index1991);
                     ctx.save();
@@ -811,6 +812,48 @@
                     ctx.textBaseline = 'middle';
                     ctx.fillText(text, xPos, yPos + (rectH / 2));
                     ctx.restore();
+                }
+
+                // 2. 基準年 (累積成長モードの時のみ表示)
+                if (currentDataFormat === 'index' && currentMode !== 'contribution' && currentMode !== 'velocity') {
+                    const indexBase = labels.indexOf(currentBaseYear);
+                    if (indexBase !== -1) {
+                        const xPosBase = x.getPixelForValue(indexBase);
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.lineWidth = 2;
+                        ctx.strokeStyle = '#000000'; // 黒色
+                        ctx.setLineDash([5, 5]);
+                        ctx.moveTo(xPosBase, top);
+                        ctx.lineTo(xPosBase, bottom);
+                        ctx.stroke();
+
+                        const textBase = `基準年 (${currentBaseYear})`;
+                        ctx.font = 'bold 12px "Noto Sans JP", sans-serif';
+                        const metricsBase = ctx.measureText(textBase);
+                        const textWidthBase = metricsBase.width;
+                        const textHeightBase = 20;
+                        const paddingBase = 6;
+                        
+                        // バブル崩壊のラベルと被らないように少し下に配置
+                        const yPosBase = top + 40;
+                        const rectXBase = xPosBase - (textWidthBase / 2) - paddingBase;
+                        const rectYBase = yPosBase;
+                        const rectWBase = textWidthBase + (paddingBase * 2);
+                        const rectHBase = textHeightBase;
+
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                        ctx.fillRect(rectXBase, rectYBase, rectWBase, rectHBase);
+                        ctx.strokeStyle = '#000000';
+                        ctx.lineWidth = 1;
+                        ctx.setLineDash([]);
+                        ctx.strokeRect(rectXBase, rectYBase, rectWBase, rectHBase);
+                        ctx.fillStyle = '#000000';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(textBase, xPosBase, yPosBase + (rectHBase / 2));
+                        ctx.restore();
+                    }
                 }
             }
         };
@@ -1126,7 +1169,7 @@
                             }
                         }
                     },
-                    plugins: [bubbleBurstPlugin]
+                    plugins: [customAnnotationsPlugin]
                 });
                 generateHtmlLegend(myChart, mode);
                 return;
@@ -1214,7 +1257,7 @@
                         y: { title: { display: true, text: yLabel }, border: { dash: [4, 4] }, grid: { color: '#f1f5f9' } }
                     }
                 },
-                plugins: [bubbleBurstPlugin]
+                plugins: [customAnnotationsPlugin]
             });
 
             generateHtmlLegend(myChart, mode);
