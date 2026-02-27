@@ -1280,10 +1280,14 @@
             const svgRect = els.svg.getBoundingClientRect();
             const startRect = startEl.getBoundingClientRect();
             const endRect = endEl.getBoundingClientRect();
-            const x1 = startRect.left + startRect.width / 2 - svgRect.left;
-            const y1 = startRect.top + startRect.height / 2 - svgRect.top;
-            const x2 = endRect.left + endRect.width / 2 - svgRect.left;
-            const y2 = endRect.top + endRect.height / 2 - svgRect.top;
+            
+            // zoom: 1.25 による座標のズレを補正して、正確に要素の中心からビームを出す
+            const scale = 1.25;
+
+            const x1 = (startRect.left + startRect.width / 2 - svgRect.left) / scale;
+            const y1 = (startRect.top + startRect.height / 2 - svgRect.top) / scale;
+            const x2 = (endRect.left + endRect.width / 2 - svgRect.left) / scale;
+            const y2 = (endRect.top + endRect.height / 2 - svgRect.top) / scale;
 
             const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
             const cx = (x1 + x2) / 2;
@@ -1333,8 +1337,9 @@
                     STATE[sector].liability -= AMOUNT_STEP;
                     const barAsset = sector === 'govt' ? els.govtABar : els.privABar;
                     const barLiab = sector === 'govt' ? els.govtLBar : els.privLBar;
-                    createParticle(barAsset, els.bankNode, 'var(--asset-color)'); 
-                    createParticle(barLiab, els.bankNode, 'var(--liability-color)'); 
+                    // 銀行システムから消滅(相殺)のビームを出すように変更
+                    createParticle(els.bankNode, barAsset, 'var(--asset-color)'); 
+                    createParticle(els.bankNode, barLiab, 'var(--liability-color)'); 
                     showPopup(barAsset, -AMOUNT_STEP, 'asset');
                     showPopup(barLiab, -AMOUNT_STEP, 'liability');
                     const actionText = sector === 'govt' ? '銀行保有国債の償還' : '貨幣消滅'; 
@@ -1348,7 +1353,9 @@
                 if (STATE.govt.asset >= AMOUNT_STEP) {
                     STATE.govt.asset -= AMOUNT_STEP;
                     STATE.private.asset += AMOUNT_STEP;
-                    createParticle(els.govtABar, els.privABar, 'var(--govt-color)');
+                    // 銀行システムを経由する表現に変更
+                    createParticle(els.govtABar, els.bankNode, 'var(--govt-color)');
+                    createParticle(els.bankNode, els.privABar, 'var(--govt-color)');
                     showPopup(els.govtABar, -AMOUNT_STEP, 'asset');
                     showPopup(els.privABar, AMOUNT_STEP, 'asset');
                     showActionName('card-govt', '財政支出', 'var(--govt-color)');
@@ -1362,7 +1369,9 @@
                 if (cash >= AMOUNT_STEP) {
                     STATE.private.asset -= AMOUNT_STEP;
                     STATE.govt.asset += AMOUNT_STEP;
-                    createParticle(els.privABar, els.govtABar, 'var(--private-color)');
+                    // 銀行システムを経由する表現に変更
+                    createParticle(els.privABar, els.bankNode, 'var(--private-color)');
+                    createParticle(els.bankNode, els.govtABar, 'var(--private-color)');
                     showPopup(els.privABar, -AMOUNT_STEP, 'asset');
                     showPopup(els.govtABar, AMOUNT_STEP, 'asset');
                     showActionName('card-private', '納税', 'var(--private-color)');
@@ -1377,7 +1386,9 @@
                     STATE.govt.asset += AMOUNT_STEP; 
                     STATE.govt.liability += AMOUNT_STEP; 
                     STATE.private.bonds += AMOUNT_STEP; 
-                    createParticle(els.privABar, els.govtABar, 'var(--private-color)');
+                    // 銀行システムを経由する表現に変更
+                    createParticle(els.privABar, els.bankNode, 'var(--private-color)');
+                    createParticle(els.bankNode, els.govtABar, 'var(--private-color)');
                     showPopup(els.govtABar, AMOUNT_STEP, 'asset');
                     showPopup(els.govtLBar, AMOUNT_STEP, 'liability');
                     showActionName('card-private', '発行国債を民間が購入', '#3b82f6');
@@ -1391,7 +1402,9 @@
                     STATE.govt.asset -= AMOUNT_STEP;
                     STATE.govt.liability -= AMOUNT_STEP;
                     STATE.private.bonds -= AMOUNT_STEP;
-                    createParticle(els.govtABar, els.privABar, 'var(--govt-color)');
+                    // 銀行システムを経由する表現に変更
+                    createParticle(els.govtABar, els.bankNode, 'var(--govt-color)');
+                    createParticle(els.bankNode, els.privABar, 'var(--govt-color)');
                     showPopup(els.govtLBar, -AMOUNT_STEP, 'liability');
                     showPopup(els.govtABar, -AMOUNT_STEP, 'asset');
                     showActionName('card-private', '民間保有国債の償還', '#06b6d4');
@@ -1647,7 +1660,7 @@
                         中央銀行の台帳上の記録に過ぎない「準備預金」は、銀行間決済や政府との取引に使われる専用のマネーです。これが直接、企業の口座や家計の財布に振り込まれることは構造上あり得ません。<br><br>
                         
                         <div style="margin-bottom: 12px; border-bottom: 2px solid var(--money-color); padding-bottom: 4px; font-weight: 800;">■ 金利調節のメカニズム：量的緩和の主目的</div>
-                        中央銀行が市場調整（オペレーション）で行っているのは、民間銀行から国債を買い取って「当座預金」を供給し、あるいは売却して回収することです。<br>
+                        中央銀行が市場調整（オペレーション）で行っているのは、民間銀行から国債を買い取りって「当座預金」を供給し、あるいは売却して回収することです。<br>
                         この当座預金の「量」を増減させることで、銀行間でお金を貸し借りする際のコスト（短期金利）に上昇・低下の圧力をかけます。これが政策金利をコントロールする基本的な仕組みです。<br><br>
                         
                         <div style="margin-bottom: 12px; border-bottom: 2px solid var(--money-color); padding-bottom: 4px; font-weight: 800;">■ 実体経済への波及：金利操作と信用創造の分離</div>
