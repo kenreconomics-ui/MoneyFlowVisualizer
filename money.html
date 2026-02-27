@@ -1250,14 +1250,24 @@
 
         function makeElementDraggable(elmnt) {
             let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            
+            // マウス操作用のイベント
             elmnt.onmousedown = dragMouseDown;
+            // タッチ操作用のイベント
+            elmnt.addEventListener('touchstart', dragTouchStart, { passive: false });
+
             function dragMouseDown(e) {
-                e = e || window.event; e.preventDefault();
+                e = e || window.event; 
+                // 凡例内の項目をクリックした場合はドラッグを開始しない
+                if (e.target.closest('.legend-item')) return;
+                
+                e.preventDefault();
                 pos3 = e.clientX; pos4 = e.clientY;
                 document.onmouseup = closeDragElement;
                 document.onmousemove = elementDrag;
                 elmnt.style.cursor = 'grabbing';
             }
+
             function elementDrag(e) {
                 e = e || window.event; e.preventDefault();
                 pos1 = pos3 - e.clientX; pos2 = pos4 - e.clientY;
@@ -1266,9 +1276,35 @@
                 elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
                 elmnt.style.right = 'auto'; elmnt.style.bottom = 'auto';
             }
+
             function closeDragElement() {
                 document.onmouseup = null; document.onmousemove = null;
                 elmnt.style.cursor = 'move';
+            }
+
+            function dragTouchStart(e) {
+                // 凡例内の項目をタップした場合はドラッグを開始せず、クリックイベントを優先
+                if (e.target.closest('.legend-item')) return;
+                
+                // 画面のスクロールを防ぐ
+                e.preventDefault();
+                pos3 = e.touches[0].clientX; pos4 = e.touches[0].clientY;
+                document.addEventListener('touchend', closeTouchDrag);
+                document.addEventListener('touchmove', elementTouchDrag, { passive: false });
+            }
+
+            function elementTouchDrag(e) {
+                e.preventDefault();
+                pos1 = pos3 - e.touches[0].clientX; pos2 = pos4 - e.touches[0].clientY;
+                pos3 = e.touches[0].clientX; pos4 = e.touches[0].clientY;
+                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+                elmnt.style.right = 'auto'; elmnt.style.bottom = 'auto';
+            }
+
+            function closeTouchDrag() {
+                document.removeEventListener('touchend', closeTouchDrag);
+                document.removeEventListener('touchmove', elementTouchDrag);
             }
         }
 
