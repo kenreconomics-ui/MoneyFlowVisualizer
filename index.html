@@ -1249,9 +1249,10 @@
             let colorVar = type === 'asset' ? 'var(--asset-color)' : 'var(--liability-color)';
             popup.style.color = colorVar;
             const rect = targetEl.getBoundingClientRect();
+            const scale = 1.25; // ズレ補正
             document.body.appendChild(popup); 
-            popup.style.left = (rect.left + rect.width/2) + 'px';
-            popup.style.top = (rect.top) + 'px';
+            popup.style.left = ((rect.left + rect.width/2) / scale) + 'px';
+            popup.style.top = (rect.top / scale) + 'px';
             setTimeout(() => popup.remove(), 1200);
         }
 
@@ -1564,9 +1565,10 @@
             el.textContent = (amount>0?'+':'') + amount;
             el.style.color = amount > 0 ? (type==='money'?'var(--money-color)':'var(--jgb-color)') : '#94a3b8';
             const rect = target.getBoundingClientRect();
+            const scale = 1.25; // ズレ補正
             document.body.appendChild(el); 
-            el.style.left = (rect.left + rect.width/2) + 'px';
-            el.style.top = (rect.top) + 'px';
+            el.style.left = ((rect.left + rect.width/2) / scale) + 'px';
+            el.style.top = (rect.top / scale) + 'px';
             setTimeout(() => el.remove(), 1000);
         }
 
@@ -1660,7 +1662,7 @@
                         中央銀行の台帳上の記録に過ぎない「準備預金」は、銀行間決済や政府との取引に使われる専用のマネーです。これが直接、企業の口座や家計の財布に振り込まれることは構造上あり得ません。<br><br>
                         
                         <div style="margin-bottom: 12px; border-bottom: 2px solid var(--money-color); padding-bottom: 4px; font-weight: 800;">■ 金利調節のメカニズム：量的緩和の主目的</div>
-                        中央銀行が市場調整（オペレーション）で行っているのは、民間銀行から国債を買い取りって「当座預金」を供給し、あるいは売却して回収することです。<br>
+                        中央銀行が市場調整（オペレーション）で行っているのは、民間銀行から国債を買い取って「当座預金」を供給し、あるいは売却して回収することです。<br>
                         この当座預金の「量」を増減させることで、銀行間でお金を貸し借りする際のコスト（短期金利）に上昇・低下の圧力をかけます。これが政策金利をコントロールする基本的な仕組みです。<br><br>
                         
                         <div style="margin-bottom: 12px; border-bottom: 2px solid var(--money-color); padding-bottom: 4px; font-weight: 800;">■ 実体経済への波及：金利操作と信用創造の分離</div>
