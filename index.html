@@ -89,8 +89,12 @@
             font-family: 'Inter', 'Noto Sans JP', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
-            height: var(--app-height);
-            width: 100vw;
+            
+            /* 125%表示のための修正 */
+            zoom: 1.25;
+            width: calc(100vw / 1.25);
+            height: calc(var(--app-height) / 1.25);
+            
             overflow: hidden;
             position: relative;
             transition: background-color 0.5s;
@@ -781,6 +785,8 @@
 
         /* Responsive UI adjustments for Mobile to mimic PC layout */
         @media (max-width: 768px) {
+            /* モバイルでも125%を維持する場合はこちらのブロック内のプロパティで調整するか、zoom:1;でリセットします。 */
+            
             /* --- Macro View Adjustments --- */
             #macro-view .economy-grid {
                 display: flex;
@@ -1630,20 +1636,22 @@
                 const msg = document.createElement('div');
                 msg.className = 'deposit-message-popup';
                 msg.innerHTML = `
-                    <div style="margin-bottom: 12px; font-weight: 800; font-size: 1.1rem; color: var(--money-color);">中央銀行による金利調節の仕組み：日銀当座預金の役割と限界</div>
-                    <div style="margin-bottom: 15px; border-bottom: 2px solid var(--money-color); padding-bottom: 4px; font-weight: 800;">■ 日銀当座預金の真実：準備預金は「外」に出ない</div>
-                    <div style="background:#fff4f4; padding:10px; border-left:4px solid #ef4444; font-weight:800; margin-bottom:10px; font-size:1.05rem; color: #ef4444;">
-                        銀行はそもそも、日銀当座預金（準備預金）を民間に貸し出しているわけではありません。
+                    <div style="font-size: 75%; line-height: 1.6;">
+                        <div style="margin-bottom: 10px; font-weight: 800; font-size: 1.15em; color: var(--money-color);">中央銀行による金利調節の仕組み：日銀当座預金の役割と限界</div>
+                        <div style="margin-bottom: 12px; border-bottom: 2px solid var(--money-color); padding-bottom: 4px; font-weight: 800;">■ 日銀当座預金の真実：準備預金は「外」に出ない</div>
+                        <div style="background:#fff4f4; padding:8px; border-left:4px solid #ef4444; font-weight:800; margin-bottom:8px; font-size:1.1em; color: #ef4444;">
+                            銀行はそもそも、日銀当座預金（準備預金）を民間に貸し出しているわけではありません。
+                        </div>
+                        中央銀行の台帳上の記録に過ぎない「準備預金」は、銀行間決済や政府との取引に使われる専用のマネーです。これが直接、企業の口座や家計の財布に振り込まれることは構造上あり得ません。<br><br>
+                        
+                        <div style="margin-bottom: 12px; border-bottom: 2px solid var(--money-color); padding-bottom: 4px; font-weight: 800;">■ 金利調節のメカニズム：量的緩和の主目的</div>
+                        中央銀行が市場調整（オペレーション）で行っているのは、民間銀行から国債を買い取って「当座預金」を供給し、あるいは売却して回収することです。<br>
+                        この当座預金の「量」を増減させることで、銀行間でお金を貸し借りする際のコスト（短期金利）に上昇・低下の圧力をかけます。これが政策金利をコントロールする基本的な仕組みです。<br><br>
+                        
+                        <div style="margin-bottom: 12px; border-bottom: 2px solid var(--money-color); padding-bottom: 4px; font-weight: 800;">■ 実体経済への波及：金利操作と信用創造の分離</div>
+                        金利を低く誘導することで間接的に企業の資金需要を刺激することは可能ですが、中央銀行が「当座預金」をいくら積み上げても、それ自体が民間の貨幣（マネーストック）を直接増やすことはありません。<br>
+                        民間部門の貨幣が増えるのは、あくまで個別の銀行が「信用創造（貸出）」を行った瞬間のみです。量的緩和によって銀行の資産構成が「国債」から「当座預金」に変化しても、それは決済の流動性が高まっただけであり、銀行による新たな貸出行動が伴わなければ、実体経済への波及は限定的にならざるを得ないという事実が、このBSの変化から可視化されます。
                     </div>
-                    中央銀行の台帳上の記録に過ぎない「準備預金」は、銀行間決済や政府との取引に使われる専用のマネーです。これが直接、企業の口座や家計の財布に振り込まれることは構造上あり得ません。<br><br>
-                    
-                    <div style="margin-bottom: 15px; border-bottom: 2px solid var(--money-color); padding-bottom: 4px; font-weight: 800;">■ 金利調節のメカニズム：量的緩和の主目的</div>
-                    中央銀行が市場調整（オペレーション）で行っているのは、民間銀行から国債を買い取りって「当座預金」を供給し、あるいは売却して回収することです。<br>
-                    この当座預金の「量」を増減させることで、銀行間でお金を貸し借りする際のコスト（短期金利）に上昇・低下の圧力をかけます。これが政策金利をコントロールする基本的な仕組みです。<br><br>
-                    
-                    <div style="margin-bottom: 15px; border-bottom: 2px solid var(--money-color); padding-bottom: 4px; font-weight: 800;">■ 実体経済への波及：金利操作と信用創造の分離</div>
-                    金利を低く誘導することで間接的に企業の資金需要を刺激することは可能ですが、中央銀行が「当座預金」をいくら積み上げても、それ自体が民間の貨幣（マネーストック）を直接増やすことはありません。<br>
-                    民間部門の貨幣が増えるのは、あくまで個別の銀行が「信用創造（貸出）」を行った瞬間のみです。量的緩和によって銀行の資産構成が「国債」から「当座預金」に変化しても、それは決済の流動性が高まっただけであり、銀行による新たな貸出行動が伴わなければ、実体経済への波及は限定的にならざるを得ないという事実が、このBSの変化から可視化されます。
                 `;
                 container.appendChild(msg);
             }
