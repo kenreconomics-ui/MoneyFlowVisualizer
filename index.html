@@ -818,6 +818,8 @@
             }
             .center-column {
                 width: 30px;
+                height: auto;
+                align-self: center;
                 margin: 0;
             }
             .bank-node {
@@ -880,6 +882,7 @@
                     <button class="btn-debt" id="btn-debt-focus">😱 政府負債</button>
                     <button class="btn-money" id="btn-money-focus">💰 民間貨幣</button>
                     <button class="btn-reset" id="reset-btn">リセット</button>
+                    <button class="btn-reset" id="btn-help" style="border-radius: 50%; width: 28px; min-width: 28px; padding: 0; font-size: 1rem;">？</button>
                 </div>
             </div>
         </header>
@@ -986,7 +989,7 @@
             </div>
         </div>
 
-        <div class="overlay visible" id="intro-overlay">
+        <div class="overlay" id="intro-overlay">
             <div class="modal">
                 <h2>Money Creation Simulator</h2>
                 <p>
@@ -995,7 +998,7 @@
                     <strong>📉 借入：</strong> 銀行からお金を借りると、その瞬間に預金という貨幣が「創造」されます。<br>
                     <strong>💸 支出：</strong> 政府が支出し、民間にお金が渡る様子を観察してください.
                 </p>
-                <button class="modal-btn" onclick="document.getElementById('intro-overlay').classList.remove('visible')">シミュレーションを始める</button>
+                <button class="modal-btn" onclick="document.getElementById('intro-overlay').classList.remove('visible')">閉じる</button>
             </div>
         </div>
     </div>
@@ -1425,6 +1428,10 @@
         document.getElementById('btn-bond-buy').onclick = () => actions.bondBuy();
         document.getElementById('btn-bond-sell').onclick = () => actions.bondSell();
         
+        document.getElementById('btn-help').onclick = () => {
+            document.getElementById('intro-overlay').classList.add('visible');
+        };
+
         document.getElementById('reset-btn').onclick = () => {
             document.body.classList.remove('debt-focus-mode');
             document.body.classList.remove('money-focus-mode');
