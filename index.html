@@ -14,16 +14,16 @@
             GLOBAL & MACRO VIEW STYLES
             ========================================= */
         :root {
-            --bg-color: #f0f2f5;
+            --bg-color: #f4f4f5;
             --card-bg: #ffffff;
-            --govt-color: #4f46e5;
-            --govt-bg: #eef2ff;
-            --private-color: #f59e0b;
+            --govt-color: #1e3a8a; /* Deep Navy */
+            --govt-bg: #eff6ff;
+            --private-color: #d97706; /* Terracotta / Mustard Gold */
             --private-bg: #fffbeb;
-            --bank-color: #64748b;
-            --asset-color: #10b981;
-            --liability-color: #ef4444;
-            --text-main: #1e293b;
+            --bank-color: #475569; /* Slate */
+            --asset-color: #0d9488; /* Teal */
+            --liability-color: #e11d48; /* Rose Red */
+            --text-main: #0f172a;
             --text-sub: #64748b;
             --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
             --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
@@ -31,51 +31,53 @@
             --app-height: 100vh;
 
             /* Micro View Specific Colors */
-            --boj-color: #475569; 
-            --boj-bg: #f1f5f9;
-            --micro-bank-color: #2563eb; 
-            --micro-bank-bg: #eff6ff;
-            --jgb-color: #3b82f6;
-            --money-color: #10b981;
-            --loan-color: #d97706; /* 貸出金の色 */
+            --boj-color: #334155; 
+            --boj-bg: #f8fafc;
+            --micro-bank-color: #475569; 
+            --micro-bank-bg: #f1f5f9;
+            --jgb-color: #2563eb;
+            --money-color: #0d9488;
+            --loan-color: #b45309;
         }
 
         /* Bank Tooltip Style */
         .bank-tooltip {
             position: absolute;
-            bottom: 125%;
+            bottom: 130%;
             left: 50%;
-            transform: translateX(-50%) translateY(10px);
-            background: rgba(30, 41, 59, 0.95);
+            transform: translateX(-50%) translateY(20px) scale(0.8);
+            background: linear-gradient(135deg, #0d9488, #2563eb);
             color: white;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            font-weight: 600;
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 800;
             white-space: nowrap;
             pointer-events: none;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             z-index: 1000;
             text-align: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            line-height: 1.4;
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+            line-height: 1.5;
+            border: 1px solid rgba(255,255,255,0.5);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
         .bank-tooltip::after {
             content: '';
             position: absolute;
             top: 100%;
             left: 50%;
-            margin-left: -6px;
-            border-width: 6px;
+            margin-left: -8px;
+            border-width: 8px;
             border-style: solid;
-            border-color: rgba(30, 41, 59, 0.95) transparent transparent transparent;
+            border-color: #1e4bd8 transparent transparent transparent;
         }
         .bank-node:hover .bank-tooltip {
             opacity: 1;
             visibility: visible;
-            transform: translateX(-50%) translateY(0);
+            transform: translateX(-50%) translateY(0) scale(1);
         }
 
         * {
@@ -313,11 +315,11 @@
             width: 50px; height: 50px; background: white; border-radius: 50%;
             box-shadow: 0 0 0 4px rgba(100, 116, 139, 0.1), var(--shadow-lg);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 10; cursor: pointer; transition: all 0.3s ease;
+            z-index: 10; cursor: pointer; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             border: 2px solid var(--bank-color); position: relative;
         }
 
-        .bank-node:hover { transform: scale(1.05); border-color: #2563eb; }
+        .bank-node:hover { transform: scale(1.15); border-color: var(--asset-color); box-shadow: 0 0 25px rgba(13, 148, 136, 0.5), inset 0 0 10px rgba(13, 148, 136, 0.2); }
         .bank-node:active { transform: scale(0.95); }
         .bank-icon { font-size: 1.2rem; }
         .bank-label { display: none; }
@@ -325,7 +327,7 @@
         .control-deck {
             background: white; padding: 10px; box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
             display: flex; gap: 10px; justify-content: center; flex-shrink: 0;
-            z-index: 50; overflow-x: auto; border-top: 1px solid #eee; transition: opacity 0.5s;
+            z-index: 50; flex-wrap: wrap; border-top: 1px solid #eee; transition: opacity 0.5s;
         }
 
         .control-group { display: flex; flex-direction: column; gap: 4px; min-width: 100px; flex-shrink: 0; }
@@ -334,33 +336,136 @@
 
         button {
             border: none; padding: 8px 6px; border-radius: 8px; font-weight: 600; font-size: 0.7rem;
-            cursor: pointer; transition: all 0.15s ease; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); display: flex; align-items: center; justify-content: center;
             gap: 4px; flex: 1; white-space: nowrap; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
         }
-        button:active { transform: translateY(1px); }
+        
+        button:hover {
+            transform: scale(1.08);
+            z-index: 100;
+        }
+
+        /* 個別ボタンのグロー効果 */
+        .btn-borrow:hover { box-shadow: 0 0 15px rgba(225, 29, 72, 0.5), inset 0 0 5px rgba(255, 255, 255, 0.3); }
+        .btn-repay:hover { box-shadow: 0 0 15px rgba(244, 63, 94, 0.5), inset 0 0 5px rgba(255, 255, 255, 0.3); }
+        .btn-spend:hover { box-shadow: 0 0 15px rgba(30, 58, 138, 0.5), inset 0 0 5px rgba(255, 255, 255, 0.3); }
+        .btn-tax:hover { box-shadow: 0 0 15px rgba(217, 119, 6, 0.5), inset 0 0 5px rgba(255, 255, 255, 0.3); }
+        .btn-bond:hover { box-shadow: 0 0 15px rgba(37, 99, 235, 0.5), inset 0 0 5px rgba(255, 255, 255, 0.3); }
+        .btn-redeem:hover { box-shadow: 0 0 15px rgba(8, 145, 178, 0.5), inset 0 0 5px rgba(255, 255, 255, 0.3); }
+        .btn-japan:hover { box-shadow: 0 0 15px rgba(15, 118, 110, 0.5), inset 0 0 5px rgba(255, 255, 255, 0.3); }
+        .btn-debt:hover { box-shadow: 0 0 15px rgba(225, 29, 72, 0.5), inset 0 0 5px rgba(255, 255, 255, 0.3); }
+        .btn-money:hover { box-shadow: 0 0 15px rgba(13, 148, 136, 0.5), inset 0 0 5px rgba(255, 255, 255, 0.3); }
+        .btn-reset:hover { box-shadow: 0 0 15px rgba(100, 116, 139, 0.5), inset 0 0 5px rgba(255, 255, 255, 0.3); }
+        .back-btn:hover { box-shadow: 0 0 15px rgba(100, 116, 139, 0.3); }
+        .op-btn.btn-buy-op:hover { box-shadow: 0 0 15px rgba(13, 148, 136, 0.5), inset 0 0 5px rgba(255, 255, 255, 0.3); }
+        .op-btn.btn-sell-op:hover { box-shadow: 0 0 15px rgba(37, 99, 235, 0.5), inset 0 0 5px rgba(255, 255, 255, 0.3); }
+
+        button:active { transform: scale(0.95); }
 
         .btn-borrow { background: var(--liability-color); }
-        .btn-repay { background: #f87171; }
+        .btn-repay { background: #f43f5e; }
         .btn-spend { background: var(--govt-color); }
         .btn-tax { background: var(--private-color); }
-        .btn-bond { background: #3b82f6; }
-        .btn-redeem { background: #06b6d4; }
+        .btn-bond { background: #2563eb; }
+        .btn-redeem { background: #0891b2; }
         .btn-reset { background: var(--text-sub); padding: 4px 8px; width: auto; font-size: 0.7rem;}
-        .btn-japan { background: #059669; color: white; padding: 4px 8px; font-size: 0.7rem;}
-        .btn-debt { background: #ef4444; color: white; padding: 4px 8px; font-size: 0.7rem; }
-        .btn-money { background: #10b981; color: white; padding: 4px 8px; font-size: 0.7rem; }
+        .btn-japan { background: #0f766e; color: white; padding: 4px 8px; font-size: 0.7rem;}
+        .btn-debt { background: var(--liability-color); color: white; padding: 4px 8px; font-size: 0.7rem; }
+        .btn-money { background: var(--asset-color); color: white; padding: 4px 8px; font-size: 0.7rem; }
+
+        /* ボタン用 カスタムツールチップ */
+        .btn-tooltip {
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px) scale(0.8);
+            background: linear-gradient(135deg, #0d9488, #2563eb);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 1000;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(13, 148, 136, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+            line-height: 1.4;
+            border: 1px solid rgba(255,255,255,0.5);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+        }
+        .btn-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #1e4bd8 transparent transparent transparent;
+        }
+        button:hover .btn-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0) scale(1);
+        }
+
+        /* 画面上部（ヘッダー）のボタンのツールチップは下に表示する */
+        #header button .btn-tooltip,
+        #micro-view .header button .btn-tooltip {
+            bottom: auto;
+            top: 130%;
+            transform: translateX(-50%) translateY(-20px) scale(0.8);
+        }
+        #header button:hover .btn-tooltip,
+        #micro-view .header button:hover .btn-tooltip {
+            transform: translateX(-50%) translateY(0) scale(1);
+        }
+        #header button .btn-tooltip::after,
+        #micro-view .header button .btn-tooltip::after {
+            top: auto;
+            bottom: 100%;
+            border-width: 6px;
+            border-style: solid;
+            border-color: transparent transparent #0d9488 transparent; /* 上向きの三角形 */
+        }
+
+        /* 画面端のボタンのツールチップ位置補正（下に表示される前提の調整） */
+        #btn-help .btn-tooltip { left: auto; right: -10px; transform: translateY(-20px) scale(0.8); }
+        #btn-help:hover .btn-tooltip { transform: translateY(0) scale(1); }
+        #btn-help .btn-tooltip::after { left: auto; right: 18px; margin-left: 0; }
+        
+        #btn-japan .btn-tooltip { left: 0; transform: translateY(-20px) scale(0.8); }
+        #btn-japan:hover .btn-tooltip { transform: translateY(0) scale(1); }
+        #btn-japan .btn-tooltip::after { left: 20px; margin-left: 0; }
+
+        #btn-back-macro .btn-tooltip { left: 0; transform: translateY(-20px) scale(0.8); }
+        #btn-back-macro:hover .btn-tooltip { transform: translateY(0) scale(1); }
+        #btn-back-macro .btn-tooltip::after { left: 20px; margin-left: 0; }
 
         /* Popups & Animations */
         .action-name-popup {
             position: absolute; top: 20%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 2.2rem; font-weight: 900; pointer-events: none; z-index: 9999;
+            font-size: 1.6rem; font-weight: 900; pointer-events: none; z-index: 9999;
             opacity: 0; animation: action-popup-anim 1.2s ease-out forwards;
             text-shadow: 0 4px 10px rgba(255,255,255,1), 0 0 5px rgba(255,255,255,0.8);
-            white-space: nowrap; background: rgba(255,255,255,0.4); padding: 5px 15px; border-radius: 10px; backdrop-filter: blur(2px);
+            white-space: nowrap; background: rgba(255,255,255,0.7); padding: 8px 24px; border-radius: 12px; backdrop-filter: blur(4px);
+            text-align: center; line-height: 1.3; border: 1px solid rgba(0,0,0,0.05);
+        }
+        .action-name-popup small {
+            font-size: 0.6em;
+            font-weight: 800;
+            color: var(--text-sub);
+            text-shadow: 0 1px 2px rgba(255,255,255,0.8);
         }
         @keyframes action-popup-anim {
             0% { opacity: 0; transform: translate(-50%, 0) scale(0.5); }
-            15% { opacity: 1; transform: translate(-50%, -20px) scale(1.2); }
+            15% { opacity: 1; transform: translate(-50%, -20px) scale(1.1); }
             30% { transform: translate(-50%, -20px) scale(1); }
             80% { opacity: 1; transform: translate(-50%, -20px); }
             100% { opacity: 0; transform: translate(-50%, -50px); }
@@ -835,6 +940,7 @@
                 padding: 6px;
                 gap: 6px;
                 justify-content: flex-start;
+                flex-wrap: wrap;
             }
             .control-group { min-width: auto; flex: 1; }
             button {
@@ -878,11 +984,11 @@
                         <span class="stat-label">民間純資産</span>
                         <span id="private-net-display" style="color: var(--asset-color)">0兆円</span>
                     </div>
-                    <button class="btn-japan" id="btn-japan">🇯🇵 現状</button>
-                    <button class="btn-debt" id="btn-debt-focus">😱 政府負債</button>
-                    <button class="btn-money" id="btn-money-focus">💰 民間貨幣</button>
-                    <button class="btn-reset" id="reset-btn">リセット</button>
-                    <button class="btn-reset" id="btn-help" style="border-radius: 50%; width: 28px; min-width: 28px; padding: 0; font-size: 1rem;">？</button>
+                    <button class="btn-japan" id="btn-japan">🇯🇵 現状<span class="btn-tooltip">現在の日本の大まかな<br>貨幣・国債の状況をセットします</span></button>
+                    <button class="btn-debt" id="btn-debt-focus">😱 政府負債<span class="btn-tooltip">政府の負債（国債）だけに<br>フォーカスして表示します</span></button>
+                    <button class="btn-money" id="btn-money-focus">💰 民間貨幣<span class="btn-tooltip">民間の貨幣だけにフォーカスして<br>表示します（クリックで詳細図へ）</span></button>
+                    <button class="btn-reset" id="reset-btn">リセット<span class="btn-tooltip">シミュレーションの状態を<br>初期化します</span></button>
+                    <button class="btn-reset" id="btn-help" style="border-radius: 50%; width: 28px; min-width: 28px; padding: 0; font-size: 1rem;">？<span class="btn-tooltip">このシミュレーターの<br>簡単な説明を表示します</span></button>
                 </div>
             </div>
         </header>
@@ -921,7 +1027,7 @@
                         <div class="bank-icon">🏦</div>
                         <div class="bank-label">銀行システム</div>
                         <div class="shockwave-ring" id="bank-shockwave"></div>
-                        <div class="bank-tooltip">銀行システム（中央銀行＋民間銀行）<br>内部の金融調節処理へ</div>
+                        <div class="bank-tooltip">🏦 銀行の内部を見る<br>クリックすると、日銀と民間銀行のやり取り（金融調節）を確認できます</div>
                     </div>
                 </div>
 
@@ -961,30 +1067,30 @@
             <div class="control-group">
                 <div class="group-label" style="color: var(--govt-color)">政府アクション</div>
                 <div class="btn-row">
-                    <button class="btn-borrow" id="btn-govt-borrow">📉 国債発行</button>
-                    <button class="btn-repay" id="btn-govt-repay">↩️ 償還</button>
+                    <button class="btn-borrow" id="btn-govt-borrow">📉 国債発行<span class="btn-tooltip">政府が銀行に国債を引き受けさせ、<br>資金（政府預金）を調達します</span></button>
+                    <button class="btn-repay" id="btn-govt-repay">↩️ 償還<span class="btn-tooltip">政府が銀行保有の国債を償還し、<br>政府の負債と資産を減らします</span></button>
                 </div>
                 <div class="btn-row">
-                    <button class="btn-spend" id="btn-govt-spend">💸 財政支出</button>
+                    <button class="btn-spend" id="btn-govt-spend">💸 財政支出<span class="btn-tooltip">政府が事業や給付などで民間に支払いを行い、<br>民間の預金を増やします</span></button>
                 </div>
             </div>
 
             <div class="control-group">
                 <div class="group-label" style="color: var(--text-sub)">民間向け国債取引</div>
                 <div class="btn-row">
-                    <button class="btn-bond" id="btn-bond-buy">📜 国債購入</button>
-                    <button class="btn-redeem" id="btn-bond-sell">💰 国債償還</button>
+                    <button class="btn-bond" id="btn-bond-buy">📜 国債購入<span class="btn-tooltip">民間が自らの預金を使って、<br>政府から新たに国債を購入します</span></button>
+                    <button class="btn-redeem" id="btn-bond-sell">💰 国債償還<span class="btn-tooltip">政府が民間保有の国債を償還し、<br>民間の預金として資金を戻します</span></button>
                 </div>
             </div>
 
             <div class="control-group">
                 <div class="group-label" style="color: var(--private-color)">民間アクション</div>
                 <div class="btn-row">
-                    <button class="btn-borrow" id="btn-private-borrow">📉 銀行借入</button>
-                    <button class="btn-repay" id="btn-private-repay">↩️ 借金返済</button>
+                    <button class="btn-borrow" id="btn-private-borrow">📉 銀行借入<span class="btn-tooltip">銀行が民間に貸し出しを行う瞬間に、<br>新たな預金（マネー）が創造されます</span></button>
+                    <button class="btn-repay" id="btn-private-repay">↩️ 借金返済<span class="btn-tooltip">民間が銀行へ借金を返済すると、<br>その分の預金（マネー）が消滅します</span></button>
                 </div>
                 <div class="btn-row">
-                    <button class="btn-tax" id="btn-tax">🏛️ 納税</button>
+                    <button class="btn-tax" id="btn-tax">🏛️ 納税<span class="btn-tooltip">民間が政府に税金を納めることで、<br>民間の預金が政府預金へと移ります</span></button>
                 </div>
             </div>
         </div>
@@ -1010,12 +1116,12 @@
         <header class="header">
             <div class="micro-layout-row">
                 <div id="micro-header-left" style="display: flex; gap:12px; align-items: center; justify-content: flex-start; flex: 1;">
-                    <button class="back-btn" id="btn-back-macro">⬅ 全体図へ戻る</button>
+                    <button class="back-btn" id="btn-back-macro">⬅ 全体図へ戻る<span class="btn-tooltip">マクロビュー（全体図）に<br>戻ります</span></button>
                     <div style="font-weight: 800; white-space: nowrap; font-size: 1.1rem; transition: color 0.5s;">金融調節</div>
                 </div>
                 
                 <div class="micro-stats">
-                    <button class="btn-money" id="btn-deposit-focus" style="margin-right: 12px; font-size: 0.95rem; padding: 12px 24px; border-radius: 12px;">💰 民間銀行貨幣</button>
+                    <button class="btn-money" id="btn-deposit-focus" style="margin-right: 12px; font-size: 0.95rem; padding: 12px 24px; border-radius: 12px;">💰 民間銀行貨幣<span class="btn-tooltip">民間銀行の貨幣（準備預金）に<br>関する解説を表示します</span></button>
 
                     <div class="m-stat-box" style="align-items: center; min-width: 90px;">
                         <div class="gauge-container">
@@ -1109,8 +1215,8 @@
         <div class="control-panel">
             <div class="micro-layout-row" style="justify-content: flex-start; overflow: hidden;">
                 <div style="display: flex; flex-shrink: 0;">
-                    <button class="op-btn btn-buy-op" id="btn-buy-op"><span>📈 買いオペ (国債買取)</span></button>
-                    <button class="op-btn btn-sell-op" id="btn-sell-op"><span>📉 売りオペ (国債売却)</span></button>
+                    <button class="op-btn btn-buy-op" id="btn-buy-op"><span>📈 買いオペ (国債買取)</span><span class="btn-tooltip">日銀が民間銀行から国債を買い取り、<br>代金として日銀当座預金を供給します。<br>金利低下の圧力がかかります。</span></button>
+                    <button class="op-btn btn-sell-op" id="btn-sell-op"><span>📉 売りオペ (国債売却)</span><span class="btn-tooltip">日銀が民間銀行へ国債を売却し、<br>代金として日銀当座預金を回収します。<br>金利上昇の圧力がかかります。</span></button>
                 </div>
                 <div style="margin-left: 12px; font-size: 0.65rem; color: var(--text-sub); flex: 1; line-height: 1.5; white-space: nowrap;">
                     ※ 買いオペ：銀行から国債を買い取り、代金を日銀当座預金（ベースマネー）で支払います。<br>
@@ -1263,7 +1369,7 @@
             const card = document.getElementById(cardId);
             const el = document.createElement('div');
             el.className = 'action-name-popup';
-            el.textContent = text;
+            el.innerHTML = text; // innerHTMLに変更して<br>タグを有効化
             if (color) el.style.color = color;
             card.appendChild(el);
             setTimeout(() => el.remove(), 1200);
@@ -1330,7 +1436,9 @@
                 createParticle(els.bankNode, barLiab, 'var(--liability-color)');
                 showPopup(barAsset, AMOUNT_STEP, 'asset');
                 showPopup(barLiab, AMOUNT_STEP, 'liability');
-                const actionText = sector === 'govt' ? '発行国債を銀行が購入' : '信用創造'; 
+                const actionText = sector === 'govt' 
+                    ? '🏛️ 政府が国債を発行<br><small>銀行から資金を調達</small>' 
+                    : '🏦 銀行が貸出を実行<br><small>新たな「預金」が誕生（信用創造）</small>'; 
                 showActionName(sector === 'govt' ? 'card-govt' : 'card-private', actionText, 'var(--liability-color)');
                 updateUI();
             },
@@ -1346,8 +1454,10 @@
                     createParticle(els.bankNode, barLiab, 'var(--liability-color)'); 
                     showPopup(barAsset, -AMOUNT_STEP, 'asset');
                     showPopup(barLiab, -AMOUNT_STEP, 'liability');
-                    const actionText = sector === 'govt' ? '銀行保有国債の償還' : '貨幣消滅'; 
-                    showActionName(sector === 'govt' ? 'card-govt' : 'card-private', actionText, '#f87171');
+                    const actionText = sector === 'govt' 
+                        ? '💰 銀行保有の国債を償還<br><small>政府の負債が減少</small>' 
+                        : '💨 借金返済により<br><small>「預金」が消滅（信用収縮）</small>'; 
+                    showActionName(sector === 'govt' ? 'card-govt' : 'card-private', actionText, '#f43f5e');
                     updateUI();
                 } else {
                     shake(sector === 'govt' ? els.cardGovt : els.cardPriv);
@@ -1362,7 +1472,7 @@
                     createParticle(els.bankNode, els.privABar, 'var(--govt-color)');
                     showPopup(els.govtABar, -AMOUNT_STEP, 'asset');
                     showPopup(els.privABar, AMOUNT_STEP, 'asset');
-                    showActionName('card-govt', '財政支出', 'var(--govt-color)');
+                    showActionName('card-govt', '💸 財政支出を実行<br><small>民間に預金が供給される</small>', 'var(--govt-color)');
                     updateUI();
                 } else {
                     shake(els.cardGovt);
@@ -1378,7 +1488,7 @@
                     createParticle(els.bankNode, els.govtABar, 'var(--private-color)');
                     showPopup(els.privABar, -AMOUNT_STEP, 'asset');
                     showPopup(els.govtABar, AMOUNT_STEP, 'asset');
-                    showActionName('card-private', '納税', 'var(--private-color)');
+                    showActionName('card-private', '🏛️ 民間から税を徴収<br><small>民間の預金が減少する</small>', 'var(--private-color)');
                     updateUI();
                 } else {
                     shake(els.cardPriv);
@@ -1395,7 +1505,7 @@
                     createParticle(els.bankNode, els.govtABar, 'var(--private-color)');
                     showPopup(els.govtABar, AMOUNT_STEP, 'asset');
                     showPopup(els.govtLBar, AMOUNT_STEP, 'liability');
-                    showActionName('card-private', '発行国債を民間が購入', '#3b82f6');
+                    showActionName('card-private', '📜 民間が国債を購入<br><small>預金が政府へ移動する</small>', 'var(--jgb-color)');
                     updateUI();
                 } else {
                     shake(els.cardPriv);
@@ -1411,7 +1521,7 @@
                     createParticle(els.bankNode, els.privABar, 'var(--govt-color)');
                     showPopup(els.govtLBar, -AMOUNT_STEP, 'liability');
                     showPopup(els.govtABar, -AMOUNT_STEP, 'asset');
-                    showActionName('card-private', '民間保有国債の償還', '#06b6d4');
+                    showActionName('card-private', '💰 民間保有の国債を償還<br><small>政府から民間へ預金が戻る</small>', '#0891b2');
                     updateUI();
                 } else {
                     shake(els.cardGovt);
@@ -1624,7 +1734,7 @@
         document.getElementById('btn-buy-op').onclick = () => {
             if (microState.bank.jgb < MICRO_CONFIG.step) return; 
             const amt = MICRO_CONFIG.step;
-            showMicroAction('買いオペ実行<br><small>金利低下圧力↓</small>', 'var(--money-color)');
+            showMicroAction('📈 日銀が国債を買い<br><small>市場にマネーを供給</small>', 'var(--money-color)');
             const els = window.miEls;
             if(els) showMicroPopup(els.bankJgb, -amt, 'jgb');
             updateInterestRate(-15); 
@@ -1640,7 +1750,7 @@
         document.getElementById('btn-sell-op').onclick = () => {
             if (microState.boj.jgb < MICRO_CONFIG.step || microState.bank.deposit < MICRO_CONFIG.step) return;
             const amt = MICRO_CONFIG.step;
-            showMicroAction('売りオペ実行<br><small>金利上昇圧力↑</small>', 'var(--jgb-color)');
+            showMicroAction('📉 日銀が国債を売り<br><small>市場からマネーを回収</small>', 'var(--jgb-color)');
             const els = window.miEls;
             if(els) showMicroPopup(els.bankDep, -amt, 'money');
             updateInterestRate(15); 
