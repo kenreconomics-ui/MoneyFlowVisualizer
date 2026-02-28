@@ -789,6 +789,7 @@
             opacity: 0; animation: action-anim 1.2s ease-out forwards;
             background: rgba(255,255,255,0.7); padding: 10px 20px; border-radius: 12px;
             backdrop-filter: blur(2px); border: 2px solid rgba(0,0,0,0.1); white-space: nowrap;
+            text-align: center; line-height: 1.3;
         }
         @keyframes action-anim {
             0% { opacity: 0; transform: translate(-50%, 0) scale(0.5); }
@@ -1734,7 +1735,7 @@
         document.getElementById('btn-buy-op').onclick = () => {
             if (microState.bank.jgb < MICRO_CONFIG.step) return; 
             const amt = MICRO_CONFIG.step;
-            showMicroAction('📈 日銀が国債を買い<br><small>市場にマネーを供給</small>', 'var(--money-color)');
+            showMicroAction('📈 日銀が国債を買い<br><small>銀行内マネー(当預)を供給</small>', 'var(--money-color)');
             const els = window.miEls;
             if(els) showMicroPopup(els.bankJgb, -amt, 'jgb');
             updateInterestRate(-15); 
@@ -1750,7 +1751,7 @@
         document.getElementById('btn-sell-op').onclick = () => {
             if (microState.boj.jgb < MICRO_CONFIG.step || microState.bank.deposit < MICRO_CONFIG.step) return;
             const amt = MICRO_CONFIG.step;
-            showMicroAction('📉 日銀が国債を売り<br><small>市場からマネーを回収</small>', 'var(--jgb-color)');
+            showMicroAction('📉 日銀が国債を売り<br><small>銀行内マネー(当預)を回収</small>', 'var(--jgb-color)');
             const els = window.miEls;
             if(els) showMicroPopup(els.bankDep, -amt, 'money');
             updateInterestRate(15); 
