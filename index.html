@@ -802,12 +802,12 @@
         .deposit-message-popup {
             position: absolute; 
             top: 50%; 
-            left: 20px; 
+            right: 20px; /* 左から右に変更 */
             transform: translateY(-50%); 
             background: rgba(255, 255, 255, 0.98); 
             padding: 24px; 
             border-radius: 20px;
-            box-shadow: 10px 15px 40px rgba(0,0,0,0.2); 
+            box-shadow: -10px 15px 40px rgba(0,0,0,0.2); /* 影の向きも逆に調整 */
             text-align: left;
             font-weight: 500; 
             color: var(--text-main); 
@@ -838,8 +838,49 @@
             border-radius: 10px;
         }
 
+        /* 政府負債フォーカス時のポップアップ */
+        .debt-message-popup {
+            position: absolute; 
+            top: 50%; 
+            right: 20px; /* 左から右に変更 */
+            transform: translateY(-50%); 
+            background: rgba(255, 255, 255, 0.98); 
+            padding: 24px; 
+            border-radius: 20px;
+            box-shadow: -10px 15px 40px rgba(0,0,0,0.2); /* 影の向きも逆に調整 */
+            text-align: left;
+            font-weight: 500; 
+            color: var(--text-main); 
+            border: 3px solid var(--liability-color);
+            z-index: 10000; 
+            width: 45%; 
+            min-width: 320px;
+            max-height: 85vh;
+            overflow-y: auto;
+            font-size: 0.95rem; 
+            line-height: 1.8;
+            opacity: 0; 
+            animation: msg-popup-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            pointer-events: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--liability-color) #f1f5f9;
+        }
+
+        .debt-message-popup::-webkit-scrollbar {
+            width: 6px;
+        }
+        .debt-message-popup::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        .debt-message-popup::-webkit-scrollbar-thumb {
+            background: var(--liability-color);
+            border-radius: 10px;
+        }
+
         @keyframes msg-popup-in {
-            0% { opacity: 0; transform: translate(-30px, -50%) scale(0.95); }
+            /* 右からスライドしてくるように変更 */
+            0% { opacity: 0; transform: translate(30px, -50%) scale(0.95); }
             100% { opacity: 1; transform: translate(0, -50%) scale(1); }
         }
 
@@ -1098,9 +1139,10 @@
                 text-align: center;
             }
 
-            .deposit-message-popup {
+            .deposit-message-popup, .debt-message-popup {
                 width: 95%;
                 left: 2.5%;
+                right: auto; /* PC用のrightを打ち消す */
                 font-size: 0.8rem;
                 padding: 12px;
                 transform: translateY(-50%);
@@ -1692,6 +1734,11 @@
             document.body.classList.remove('money-focus-mode');
             const assetView = document.getElementById('asset-view-iframe');
             if (assetView) assetView.remove();
+            
+            // 政府負債ポップアップがあれば削除
+            const existingDebtMsg = document.getElementById('macro-view').querySelector('.debt-message-popup');
+            if (existingDebtMsg) existingDebtMsg.remove();
+            
             const canvasContainer = document.querySelector('.canvas-container');
             const footer = document.getElementById('footer');
             if(canvasContainer) canvasContainer.style.display = '';
@@ -1708,6 +1755,11 @@
             document.body.classList.remove('money-focus-mode');
             const assetView = document.getElementById('asset-view-iframe');
             if (assetView) assetView.remove();
+            
+            // 政府負債ポップアップがあれば削除
+            const existingDebtMsg = document.getElementById('macro-view').querySelector('.debt-message-popup');
+            if (existingDebtMsg) existingDebtMsg.remove();
+            
             const canvasContainer = document.querySelector('.canvas-container');
             const footer = document.getElementById('footer');
             if(canvasContainer) canvasContainer.style.display = '';
@@ -1728,7 +1780,36 @@
                  document.getElementById('footer').style.display = '';
                  document.body.classList.remove('money-focus-mode');
             }
-            document.body.classList.toggle('debt-focus-mode');
+            
+            const isFocused = document.body.classList.toggle('debt-focus-mode');
+            
+            const container = document.getElementById('macro-view');
+            const existingMsg = container.querySelector('.debt-message-popup');
+            if (existingMsg) existingMsg.remove();
+
+            if (isFocused) {
+                const msg = document.createElement('div');
+                msg.className = 'debt-message-popup';
+                msg.innerHTML = `
+                    <div style="font-size: 75%; line-height: 1.6;">
+                        <div style="margin-bottom: 10px; font-weight: 800; font-size: 1.15em; color: var(--liability-color);">政府の「借金」の正体：誰かの負債は誰かの資産</div>
+                        <div style="margin-bottom: 12px; border-bottom: 2px solid var(--liability-color); padding-bottom: 4px; font-weight: 800;">■ 政府の赤字は、民間の黒字</div>
+                        <div style="background:#fff4f4; padding:8px; border-left:4px solid #ef4444; font-weight:800; margin-bottom:8px; font-size:1.1em; color: #ef4444;">
+                            政府が国債を発行して（負債を増やして）支出をすると、その分だけ民間の預金（資産）が増加します。
+                        </div>
+                        つまり、政府の負債はそのまま民間部門の純資産になります。このシミュレーターで「財政支出」を行うと、政府の負債が増えると同時に民間の資産が増えることが確認できます。<br><br>
+                        
+                        <div style="margin-bottom: 12px; border-bottom: 2px solid var(--liability-color); padding-bottom: 4px; font-weight: 800;">■ 「将来世代へのツケ」の誤解</div>
+                        政府の負債を「家計の借金」と同じように捉えるのは誤りです。政府は自国通貨を発行できるため、自国通貨建ての国債でデフォルト（債務不履行）に陥ることはありません。<br>
+                        真の制約は「借金の額」ではなく、インフレ率（供給能力の限界）です。<br><br>
+                        
+                        <div style="margin-bottom: 12px; border-bottom: 2px solid var(--liability-color); padding-bottom: 4px; font-weight: 800;">■ 国債償還の真実</div>
+                        政府が国債を償還（借金を返済）するためには、民間から税金を徴収する必要があります。これは、市場からマネーを消滅させる「信用収縮」のプロセスです。<br>
+                        過度な負債の削減（緊縮財政）は、民間部門から資産を奪い、経済を縮小させる原因となります。
+                    </div>
+                `;
+                container.appendChild(msg);
+            }
         };
 
         document.getElementById('btn-money-focus').onclick = () => {
@@ -1737,8 +1818,13 @@
             const existingAssetView = document.getElementById(assetViewId);
             const canvasContainer = document.querySelector('.canvas-container');
             const footer = document.getElementById('footer');
+            
+            // 政府負債フォーカスがONなら解除し、ポップアップを削除
+            document.body.classList.remove('debt-focus-mode');
+            const existingDebtMsg = document.getElementById('macro-view').querySelector('.debt-message-popup');
+            if (existingDebtMsg) existingDebtMsg.remove();
+            
             if (isFocused) {
-                document.body.classList.remove('debt-focus-mode');
                 if(canvasContainer) canvasContainer.style.display = 'none';
                 if(footer) footer.style.display = 'none';
                 const container = document.createElement('div');
