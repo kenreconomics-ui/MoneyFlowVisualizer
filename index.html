@@ -802,12 +802,12 @@
         .deposit-message-popup {
             position: absolute; 
             top: 50%; 
-            right: 20px; /* 左から右に変更 */
+            left: 20px; 
             transform: translateY(-50%); 
             background: rgba(255, 255, 255, 0.98); 
             padding: 24px; 
             border-radius: 20px;
-            box-shadow: -10px 15px 40px rgba(0,0,0,0.2); /* 影の向きも逆に調整 */
+            box-shadow: 10px 15px 40px rgba(0,0,0,0.2); 
             text-align: left;
             font-weight: 500; 
             color: var(--text-main); 
@@ -820,7 +820,7 @@
             font-size: 0.95rem; 
             line-height: 1.8;
             opacity: 0; 
-            animation: msg-popup-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            animation: msg-popup-in-left 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
             pointer-events: auto; /* Enable interaction for scrolling */
             scrollbar-width: thin;
             scrollbar-color: var(--money-color) #f1f5f9;
@@ -842,12 +842,12 @@
         .debt-message-popup {
             position: absolute; 
             top: 50%; 
-            right: 20px; /* 左から右に変更 */
+            right: 20px; 
             transform: translateY(-50%); 
             background: rgba(255, 255, 255, 0.98); 
             padding: 24px; 
             border-radius: 20px;
-            box-shadow: -10px 15px 40px rgba(0,0,0,0.2); /* 影の向きも逆に調整 */
+            box-shadow: -10px 15px 40px rgba(0,0,0,0.2); 
             text-align: left;
             font-weight: 500; 
             color: var(--text-main); 
@@ -860,7 +860,7 @@
             font-size: 0.95rem; 
             line-height: 1.8;
             opacity: 0; 
-            animation: msg-popup-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            animation: msg-popup-in-right 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
             pointer-events: auto;
             scrollbar-width: thin;
             scrollbar-color: var(--liability-color) #f1f5f9;
@@ -878,7 +878,12 @@
             border-radius: 10px;
         }
 
-        @keyframes msg-popup-in {
+        @keyframes msg-popup-in-left {
+            0% { opacity: 0; transform: translate(-30px, -50%) scale(0.95); }
+            100% { opacity: 1; transform: translate(0, -50%) scale(1); }
+        }
+
+        @keyframes msg-popup-in-right {
             /* 右からスライドしてくるように変更 */
             0% { opacity: 0; transform: translate(30px, -50%) scale(0.95); }
             100% { opacity: 1; transform: translate(0, -50%) scale(1); }
