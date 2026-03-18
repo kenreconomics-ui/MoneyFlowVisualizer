@@ -1209,16 +1209,16 @@
             };
 
             const setResetState = () => {
-                // 政府が少し国債を発行でき、銀行が引き受けられるように、初期のベースマネーを持たせておく
-                STATE.govt = { asset: 0, liability: 200 };
-                STATE.private = { asset: 200, liability: 0, bonds: 0 };
-                microState = { boj: { jgb: 200, deposit: 200, govtDeposit: 0 }, bank: { jgb: 0, deposit: 200, liabilities: 200, loans: 0 } };
+                STATE.govt = { asset: 0, liability: 0 };
+                STATE.private = { asset: 0, liability: 0, bonds: 0 };
+                microState = { boj: { jgb: 0, deposit: 0, govtDeposit: 0 }, bank: { jgb: 0, deposit: 0, liabilities: 0, loans: 0 } };
                 updateInterestRate(0, true);
                 updateUI();
             };
 
             // Initialize app with Japan State
             setJapanState();
+            showStatusMessage('現在の日本の貨幣状況を再現'); // 初期ロード時にポップアップを表示
 
             // --- Navigation ---
             els.bankNode.addEventListener('click', () => {
@@ -1399,17 +1399,6 @@
             // --- Actions ---
             const actions = {
                 borrow: (sector) => {
-                    if (sector === 'govt') {
-                        // 政府が国債を発行して銀行が買い取るには、銀行の日銀当座預金が必要。
-                        // 事前にマクロからミクロに同期したときの仮想当座預金量を計算
-                        syncMacroToMicro();
-                        if (microState.bank.deposit < AMOUNT_STEP) {
-                            shake(els.cardGovt);
-                            showStatusMessage('銀行の日銀当座預金が不足しています（日銀の買いオペによる資金供給が必要です）');
-                            return;
-                        }
-                    }
-
                     STATE[sector].asset += AMOUNT_STEP;
                     STATE[sector].liability += AMOUNT_STEP;
                     const barAsset = sector === 'govt' ? els.govtABar : els.privABar;
@@ -1420,7 +1409,7 @@
                     showPopup(barAsset, AMOUNT_STEP, 'asset');
                     showPopup(barLiab, AMOUNT_STEP, 'liability');
                     const actionText = sector === 'govt' 
-                        ? '🏛️ 政府が国債を発行<br><small>銀行から資金を調達</small>' 
+                        ? '🏛️ 政府が国債を発行<br><small>資産(預金)と負債が同時に誕生</small>' 
                         : '🏦 銀行が貸出を実行<br><small>新たな「預金」が誕生（信用創造）</small>'; 
                     showActionName(sector === 'govt' ? 'card-govt' : 'card-private', actionText, 'var(--liability-color)');
                     updateUI();
