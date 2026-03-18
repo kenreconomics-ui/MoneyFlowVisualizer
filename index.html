@@ -85,9 +85,8 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* zoomプロパティを削除し、必要に応じてフォントサイズを微調整して大きさを担保 */
         html {
-            font-size: 18px; /* 全体的に少し大きく見せるための調整 */
+            font-size: 18px;
         }
 
         body {
@@ -221,7 +220,6 @@
             overflow: visible; 
         }
 
-        /* 詳細度を上げて !important を削除 */
         #macro-view .sector-govt {
             background: linear-gradient(to bottom, #fff, var(--govt-bg));
             border-top: 4px solid var(--govt-color);
@@ -533,7 +531,6 @@
         body.debt-focus-mode #macro-view .control-deck,
         body.debt-focus-mode #macro-view .stat-item:not(.stat-debt-only) { opacity: 0.05; filter: blur(2px); pointer-events: none; }
         
-        /* セレクタの強さを利用して !important を減らす */
         body.debt-focus-mode #macro-view #card-govt { background: transparent; box-shadow: none; border-color: transparent; z-index: 3001; position: relative; }
         body.debt-focus-mode #macro-view #card-govt .bs-container,
         body.debt-focus-mode #macro-view #card-govt .bs-column,
@@ -912,18 +909,16 @@
                 </div>
                 <div class="total-stats">
                     <div class="stat-item stat-debt-only">
-                        <!-- ここを純資産へ変更 -->
                         <span class="stat-label" style="text-align: right;">政府純資産<br>(貨幣・国債)</span>
                         <span id="govt-net-display" style="color: var(--liability-color)">0兆円</span>
                     </div>
                     <div class="stat-item stat-money-only">
-                        <!-- ここを純資産へ変更 -->
                         <span class="stat-label" style="text-align: right;">民間純資産<br>(貨幣・国債)</span>
                         <span id="private-net-display" style="color: var(--asset-color)">0兆円</span>
                     </div>
                     <button class="btn-japan" id="btn-japan">🇯🇵 現状<span class="btn-tooltip">現在の日本の大まかな<br>貨幣・国債の状況をセットします</span></button>
                     <button class="btn-debt" id="btn-debt-focus">😱 政府負債<span class="btn-tooltip">政府の負債（国債）だけに<br>フォーカスして表示します</span></button>
-                    <button class="btn-money" id="btn-money-focus">💰 民間貨幣<span class="btn-tooltip">民間の貨幣の正体について<br>解説を表示します</span></button>
+                    <button class="btn-money" id="btn-money-focus">💰 民間貨幣<span class="btn-tooltip">民間の貨幣の正体について<br>詳しく解説したページを開きます</span></button>
                     <button class="btn-reset" id="reset-btn">リセット<span class="btn-tooltip">シミュレーションの状態を<br>初期化します</span></button>
                     <button class="btn-reset" id="btn-help" style="border-radius: 50%; width: 32px; min-width: 32px; padding: 0; font-size: 1.1rem;">？<span class="btn-tooltip">このシミュレーターの<br>簡単な説明を表示します</span></button>
                 </div>
@@ -1164,7 +1159,6 @@
     </div>
 
     <script>
-        // 即時実行関数でラップし、グローバル変数の汚染を防ぐ
         document.addEventListener('DOMContentLoaded', () => {
             
             // --- Elements ---
@@ -1197,14 +1191,34 @@
             };
 
             // --- State ---
-            const STATE = { govt: { asset: 0, liability: 0 }, private: { asset: 0, liability: 0, bonds: 0 } };
+            let STATE = { govt: { asset: 0, liability: 0 }, private: { asset: 0, liability: 0, bonds: 0 } };
+            let microState = { boj: { jgb: 0, deposit: 0, govtDeposit: 0 }, bank: { jgb: 0, deposit: 0, liabilities: 0, loans: 0 } };
             const AMOUNT_STEP = 100;
-
             const MICRO_CONFIG = { step: 100, max: 800 };
-            const MICRO_INITIAL = { boj: { jgb: 0, deposit: 0, govtDeposit: 0 }, bank: { jgb: 0, deposit: 0, liabilities: 0, loans: 0 } };
-            let microState = JSON.parse(JSON.stringify(MICRO_INITIAL));
+            
             let policyRateAngle = 0; 
             let bondYieldAngle = 0;
+
+            // --- Setup Initial State (日本現状) ---
+            const setJapanState = () => {
+                STATE.govt = { asset: 0, liability: 1300 }; 
+                STATE.private = { asset: 1900, liability: 600, bonds: 400 }; 
+                microState = { boj: { jgb: 600, deposit: 600, govtDeposit: 0 }, bank: { jgb: 300, deposit: 600, liabilities: 1500, loans: 600 } };
+                updateInterestRate(-30, true); 
+                updateUI();
+            };
+
+            const setResetState = () => {
+                // 政府が少し国債を発行でき、銀行が引き受けられるように、初期のベースマネーを持たせておく
+                STATE.govt = { asset: 0, liability: 200 };
+                STATE.private = { asset: 200, liability: 0, bonds: 0 };
+                microState = { boj: { jgb: 200, deposit: 200, govtDeposit: 0 }, bank: { jgb: 0, deposit: 200, liabilities: 200, loans: 0 } };
+                updateInterestRate(0, true);
+                updateUI();
+            };
+
+            // Initialize app with Japan State
+            setJapanState();
 
             // --- Navigation ---
             els.bankNode.addEventListener('click', () => {
@@ -1234,17 +1248,29 @@
                 const nonBankJgb = STATE.private.bonds;
                 const financialSectorJgb = Math.max(0, totalJgb - nonBankJgb);
 
+                // 民間銀行と日銀で保有している国債の合計が金融機関全体の保有量になるように調整
                 const currentMicroTotal = microState.boj.jgb + microState.bank.jgb;
-                if (currentMicroTotal !== financialSectorJgb) {
-                    if (microState.boj.jgb > financialSectorJgb) {
-                        microState.boj.jgb = financialSectorJgb;
-                    }
-                    microState.bank.jgb = financialSectorJgb - microState.boj.jgb;
+                const diffJgb = financialSectorJgb - currentMicroTotal;
+                
+                // 差分は民間銀行の国債保有量で調整する（政府発行/償還は民間銀行が相手となる）
+                microState.bank.jgb += diffJgb;
+                
+                // もし民間銀行の国債が足りない場合は日銀から減らす
+                if (microState.bank.jgb < 0) {
+                    microState.boj.jgb += microState.bank.jgb;
+                    microState.bank.jgb = 0;
                 }
 
-                microState.boj.deposit = microState.boj.jgb;
+                // 政府預金の同期
                 microState.boj.govtDeposit = STATE.govt.asset;
+
+                // 修正1：日銀当座預金は、日銀の資産(国債)から負債(政府預金)を引いたもの
+                microState.boj.deposit = Math.max(0, microState.boj.jgb - microState.boj.govtDeposit);
+                
+                // 民間銀行の当座預金も同期
                 microState.bank.deposit = microState.boj.deposit; 
+                
+                // その他の民間銀行のBS項目
                 microState.bank.liabilities = Math.max(0, STATE.private.asset - STATE.private.bonds);
                 microState.bank.loans = STATE.private.liability;
             }
@@ -1308,7 +1334,6 @@
                 popup.style.color = type === 'asset' ? 'var(--asset-color)' : 'var(--liability-color)';
                 const rect = targetEl.getBoundingClientRect();
                 document.body.appendChild(popup); 
-                // zoomを取り除いたので、純粋に座標を計算
                 popup.style.left = (rect.left + rect.width / 2) + 'px';
                 popup.style.top = rect.top + 'px';
                 setTimeout(() => popup.remove(), 1200);
@@ -1340,7 +1365,6 @@
                 const startRect = startEl.getBoundingClientRect();
                 const endRect = endEl.getBoundingClientRect();
                 
-                // zoomを削除したため、座標補正は不要
                 const x1 = startRect.left + startRect.width / 2 - svgRect.left;
                 const y1 = startRect.top + startRect.height / 2 - svgRect.top;
                 const x2 = endRect.left + endRect.width / 2 - svgRect.left;
@@ -1375,6 +1399,17 @@
             // --- Actions ---
             const actions = {
                 borrow: (sector) => {
+                    if (sector === 'govt') {
+                        // 政府が国債を発行して銀行が買い取るには、銀行の日銀当座預金が必要。
+                        // 事前にマクロからミクロに同期したときの仮想当座預金量を計算
+                        syncMacroToMicro();
+                        if (microState.bank.deposit < AMOUNT_STEP) {
+                            shake(els.cardGovt);
+                            showStatusMessage('銀行の日銀当座預金が不足しています（日銀の買いオペによる資金供給が必要です）');
+                            return;
+                        }
+                    }
+
                     STATE[sector].asset += AMOUNT_STEP;
                     STATE[sector].liability += AMOUNT_STEP;
                     const barAsset = sector === 'govt' ? els.govtABar : els.privABar;
@@ -1494,23 +1529,13 @@
             document.getElementById('reset-btn').addEventListener('click', () => {
                 document.body.classList.remove('debt-focus-mode', 'money-focus-mode');
                 clearPopups();
-                
-                STATE.govt = { asset: 0, liability: 0 };
-                STATE.private = { asset: 0, liability: 0, bonds: 0 };
-                microState = JSON.parse(JSON.stringify(MICRO_INITIAL));
-                updateInterestRate(0); 
-                updateUI();
+                setResetState();
             });
 
             document.getElementById('btn-japan').addEventListener('click', () => {
                 document.body.classList.remove('debt-focus-mode', 'money-focus-mode');
                 clearPopups();
-                
-                STATE.govt = { asset: 0, liability: 1300 }; 
-                STATE.private = { asset: 1900, liability: 600, bonds: 400 }; 
-                microState = { boj: { jgb: 600, deposit: 600 }, bank: { jgb: 300, deposit: 600, liabilities: 1500 } };
-                updateInterestRate(-30); 
-                updateUI();
+                setJapanState();
                 showStatusMessage('現在の日本の貨幣状況を再現');
             });
 
@@ -1545,34 +1570,9 @@
                 }
             });
 
-            // Focus Mode: Private Money (Replaced iframe with popup text)
+            // Focus Mode: Private Money
             document.getElementById('btn-money-focus').addEventListener('click', () => {
-                document.body.classList.remove('debt-focus-mode');
-                clearPopups();
-                
-                const isFocused = document.body.classList.toggle('money-focus-mode');
-                if (isFocused) {
-                    const msg = document.createElement('div');
-                    msg.className = 'info-message-popup money-message-popup';
-                    msg.innerHTML = `
-                        <div style="font-size: 85%; line-height: 1.6;">
-                            <div style="margin-bottom: 12px; font-weight: 900; font-size: 1.2em; color: var(--asset-color);">民間貨幣（預金）の正体：無から生まれるお金</div>
-                            <div style="margin-bottom: 12px; border-bottom: 2px solid var(--asset-color); padding-bottom: 4px; font-weight: 800;">■ 信用創造：銀行は預金を「貸し出していない」</div>
-                            <div style="background:#f0fdf4; padding:10px; border-left:4px solid #10b981; font-weight:800; margin-bottom:10px; font-size:1.05em; color: #059669;">
-                                銀行預金は、あなたが銀行にお金を預けた結果ではなく、銀行が誰かにお金を「貸し出した瞬間」に無からキーストロークで創造されたものです。
-                            </div>
-                            このシミュレーターで「銀行借入」を行ってみてください。銀行が貸し出しを行うと、負債（借入金）と同時に、同額の新しい「預金（資産）」が生まれることがわかります。<br><br>
-                            
-                            <div style="margin-bottom: 12px; border-bottom: 2px solid var(--asset-color); padding-bottom: 4px; font-weight: 800;">■ 政府支出による預金創造</div>
-                            民間の預金が増えるもう一つの大きな要因が「政府の財政支出」です。政府が国債を発行し、事業会社や家計に支払いを行うと、新たな民間預金が生まれます。逆に、税金を徴収すると預金は消滅します。<br><br>
-                            
-                            <div style="margin-bottom: 12px; border-bottom: 2px solid var(--asset-color); padding-bottom: 4px; font-weight: 800;">■ 貨幣のピラミッド</div>
-                            私たちが日常で使う「銀行預金」は、民間銀行の負債です。一方で、銀行間や政府との決済で使われる「日銀当座預金」は中央銀行の負債です。これら二つのマネーは明確に階層が分かれており、直接交わることはありません。<br>
-                            ※中央の「🏦銀行システム」をクリックして、その分離された構造を確認してみてください。
-                        </div>
-                    `;
-                    document.getElementById('macro-view').appendChild(msg);
-                }
+                window.open('https://kenreconomics-ui.github.io/MoneyFlowVisualizer/money.html', '_blank');
             });
 
             // --- Micro View Functions ---
@@ -1641,29 +1641,27 @@
                 setTimeout(() => el.remove(), 1200);
             }
 
-            function updateInterestRate(deltaOrValue) {
-                if (deltaOrValue === 0) {
-                    policyRateAngle = 0; bondYieldAngle = 0;
-                    const bondNeedle = document.getElementById('gauge-needle-bond');
-                    if(bondNeedle) bondNeedle.style.transform = `rotate(0deg)`;
-                    setTimeout(() => {
-                        const policyNeedle = document.getElementById('gauge-needle-policy');
-                        if(policyNeedle) policyNeedle.style.transform = `rotate(0deg)`;
-                    }, 200);
+            // 修正3：金利メーターの更新（絶対値指定か、相対加算か）
+            function updateInterestRate(value, isAbsolute = false) {
+                if (isAbsolute) {
+                    bondYieldAngle = value;
+                    policyRateAngle = value;
                 } else {
-                    bondYieldAngle += deltaOrValue;
-                    if (bondYieldAngle < -45) bondYieldAngle = -45;
-                    if (bondYieldAngle > 45) bondYieldAngle = 45;
-                    const bondNeedle = document.getElementById('gauge-needle-bond');
-                    if(bondNeedle) bondNeedle.style.transform = `rotate(${bondYieldAngle}deg)`;
-                    setTimeout(() => {
-                        policyRateAngle += deltaOrValue;
-                        if (policyRateAngle < -45) policyRateAngle = -45;
-                        if (policyRateAngle > 45) policyRateAngle = 45;
-                        const policyNeedle = document.getElementById('gauge-needle-policy');
-                        if(policyNeedle) policyNeedle.style.transform = `rotate(${policyRateAngle}deg)`;
-                    }, 200);
+                    bondYieldAngle += value;
+                    policyRateAngle += value;
                 }
+                
+                // 上限・下限のクランプ
+                bondYieldAngle = Math.max(-45, Math.min(45, bondYieldAngle));
+                policyRateAngle = Math.max(-45, Math.min(45, policyRateAngle));
+
+                const bondNeedle = document.getElementById('gauge-needle-bond');
+                if(bondNeedle) bondNeedle.style.transform = `rotate(${bondYieldAngle}deg)`;
+                
+                setTimeout(() => {
+                    const policyNeedle = document.getElementById('gauge-needle-policy');
+                    if(policyNeedle) policyNeedle.style.transform = `rotate(${policyRateAngle}deg)`;
+                }, 200);
             }
 
             document.getElementById('btn-buy-op').addEventListener('click', () => {
@@ -1671,7 +1669,7 @@
                 const amt = MICRO_CONFIG.step;
                 showMicroAction('📈 日銀が国債を買い<br><small>銀行内マネー(当預)を供給</small>', 'var(--money-color)');
                 showMicroPopup(miEls.bankJgb, -amt, 'jgb');
-                updateInterestRate(-15); 
+                updateInterestRate(-15, false); // 相対値
                 microState.boj.jgb += amt; microState.boj.deposit += amt;
                 microState.bank.jgb -= amt; microState.bank.deposit += amt;
                 updateMicroUI();
@@ -1684,11 +1682,14 @@
                 const amt = MICRO_CONFIG.step;
                 showMicroAction('📉 日銀が国債を売り<br><small>銀行内マネー(当預)を回収</small>', 'var(--jgb-color)');
                 showMicroPopup(miEls.bankDep, -amt, 'money');
-                updateInterestRate(15); 
+                updateInterestRate(15, false); // 相対値
                 microState.boj.jgb -= amt; microState.boj.deposit -= amt;
                 microState.bank.jgb += amt; microState.bank.deposit -= amt;
                 updateMicroUI();
                 flashEl(miEls.bankJgb); showMicroPopup(miEls.bankJgb, amt, 'jgb');
+                // 修正2：日銀側のアニメーション追加
+                flashEl(miEls.bojJgb); showMicroPopup(miEls.bojJgb, -amt, 'jgb');
+                flashEl(miEls.bojDep); showMicroPopup(miEls.bojDep, -amt, 'money');
             });
 
             document.getElementById('btn-deposit-focus').addEventListener('click', () => {
@@ -1720,9 +1721,6 @@
                 }
             });
 
-            // Initialize UI
-            updateUI();
-            
             // Adjust height for mobile browsers
             const setAppHeight = () => {
                 document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
