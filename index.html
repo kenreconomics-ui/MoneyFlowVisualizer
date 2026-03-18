@@ -542,27 +542,26 @@
         body.debt-focus-mode #macro-view #label-govt-liability { opacity: 1; font-size: 1.8rem; color: #ef4444; font-weight: 900; background: transparent; text-shadow: 0 0 10px rgba(0,0,0,1); transform: translateY(60px) scale(1.3); z-index: 3003; position: relative; white-space: nowrap; }
         body.debt-focus-mode .btn-debt { box-shadow: 0 0 15px #ef4444; transform: scale(1.1); }
 
-        body.money-focus-mode { background-color: #222; }
-        body.money-focus-mode #macro-view .canvas-container { overflow: visible !important; z-index: 3000; }
-        body.money-focus-mode #macro-view .sector-govt,
-        body.money-focus-mode #macro-view .center-column,
-        body.money-focus-mode #macro-view #private-bond-bar,
-        body.money-focus-mode #macro-view #private-liability-bar,
-        body.money-focus-mode #macro-view #label-private-liability,
-        body.money-focus-mode #macro-view .sector-header,
-        body.money-focus-mode #macro-view .control-deck,
-        body.money-focus-mode #macro-view .stat-item:not(.stat-money-only) { opacity: 0.05; filter: blur(2px); pointer-events: none; }
-        
-        body.money-focus-mode #macro-view #card-private { background: transparent; box-shadow: none; border-color: transparent; z-index: 3001; position: relative; }
-        body.money-focus-mode #macro-view #card-private .bs-container,
-        body.money-focus-mode #macro-view #card-private .bs-column,
-        body.money-focus-mode #macro-view #card-private .chart-container,
-        body.money-focus-mode #macro-view #private-asset-bar { overflow: visible !important; }
-        body.money-focus-mode #macro-view .sector-private { background: transparent; border-top-color: transparent; }
-        body.money-focus-mode #macro-view .bs-column { background: transparent; }
-        body.money-focus-mode #macro-view #private-asset-bar { opacity: 1; transform: scale(1.05); box-shadow: 0 0 40px rgba(16, 185, 129, 0.9); z-index: 3002; }
-        body.money-focus-mode #macro-view #label-private-asset { opacity: 1; font-size: 1.8rem; color: #10b981; font-weight: 900; background: transparent; text-shadow: 0 0 10px rgba(0,0,0,1); transform: translateY(60px) scale(1.3); z-index: 3003; position: relative; white-space: nowrap; }
-        body.money-focus-mode .btn-money { box-shadow: 0 0 15px #10b981; transform: scale(1.1); }
+        /* Iframe Mode (民間貨幣ページ表示用) */
+        .iframe-container {
+            display: none;
+            flex: 1;
+            width: 100%;
+            background: var(--bg-color);
+            z-index: 100;
+        }
+        .iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        body.money-iframe-mode .iframe-container {
+            display: block;
+        }
+        body.money-iframe-mode #macro-view .canvas-container,
+        body.money-iframe-mode #macro-view .control-deck {
+            display: none;
+        }
 
         @media (min-width: 769px) {
             #macro-view .economy-grid { display: grid; grid-template-columns: 1fr 140px 1fr; gap: 40px; max-width: 1200px; margin: 0 auto; height: 100%; max-height: 600px; }
@@ -918,7 +917,7 @@
                     </div>
                     <button class="btn-japan" id="btn-japan">🇯🇵 現状<span class="btn-tooltip">現在の日本の大まかな<br>貨幣・国債の状況をセットします</span></button>
                     <button class="btn-debt" id="btn-debt-focus">😱 政府負債<span class="btn-tooltip">政府の負債（国債）だけに<br>フォーカスして表示します</span></button>
-                    <button class="btn-money" id="btn-money-focus">💰 民間貨幣<span class="btn-tooltip">民間の貨幣の正体について<br>詳しく解説したページを開きます</span></button>
+                    <button class="btn-money" id="btn-money-focus">💰 民間貨幣<span class="btn-tooltip">民間の貨幣の正体について<br>解説を表示します</span></button>
                     <button class="btn-reset" id="reset-btn">リセット<span class="btn-tooltip">シミュレーションの状態を<br>初期化します</span></button>
                     <button class="btn-reset" id="btn-help" style="border-radius: 50%; width: 32px; min-width: 32px; padding: 0; font-size: 1.1rem;">？<span class="btn-tooltip">このシミュレーターの<br>簡単な説明を表示します</span></button>
                 </div>
@@ -1025,6 +1024,11 @@
                     <button class="btn-tax" id="btn-tax">🏛️ 納税<span class="btn-tooltip">民間が政府に税金を納めることで、<br>民間の預金が政府預金へと移ります</span></button>
                 </div>
             </div>
+        </div>
+
+        <!-- iframe表示用コンテナ -->
+        <div id="iframe-container" class="iframe-container">
+            <iframe id="money-iframe"></iframe>
         </div>
 
         <div class="overlay" id="intro-overlay">
@@ -1506,6 +1510,14 @@
             document.getElementById('btn-bond-buy').addEventListener('click', () => actions.bondBuy());
             document.getElementById('btn-bond-sell').addEventListener('click', () => actions.bondSell());
 
+            // 内部のiframeモードを閉じる関数
+            const closeIframeMode = () => {
+                document.body.classList.remove('money-iframe-mode');
+                const btn = document.getElementById('btn-money-focus');
+                btn.innerHTML = '💰 民間貨幣<span class="btn-tooltip">民間の貨幣の正体について<br>解説を表示します</span>';
+                btn.style.background = '';
+            };
+
             document.getElementById('btn-help').addEventListener('click', () => {
                 document.getElementById('intro-overlay').classList.add('visible');
             });
@@ -1516,13 +1528,15 @@
             };
 
             document.getElementById('reset-btn').addEventListener('click', () => {
-                document.body.classList.remove('debt-focus-mode', 'money-focus-mode');
+                document.body.classList.remove('debt-focus-mode');
+                closeIframeMode();
                 clearPopups();
                 setResetState();
             });
 
             document.getElementById('btn-japan').addEventListener('click', () => {
-                document.body.classList.remove('debt-focus-mode', 'money-focus-mode');
+                document.body.classList.remove('debt-focus-mode');
+                closeIframeMode();
                 clearPopups();
                 setJapanState();
                 showStatusMessage('現在の日本の貨幣状況を再現');
@@ -1530,7 +1544,7 @@
 
             // Focus Mode: Govt Debt
             document.getElementById('btn-debt-focus').addEventListener('click', () => {
-                document.body.classList.remove('money-focus-mode');
+                closeIframeMode();
                 clearPopups();
                 
                 const isFocused = document.body.classList.toggle('debt-focus-mode');
@@ -1559,9 +1573,27 @@
                 }
             });
 
-            // Focus Mode: Private Money
+            // Focus Mode: Private Money (iframe表示切替)
             document.getElementById('btn-money-focus').addEventListener('click', () => {
-                window.open('https://kenreconomics-ui.github.io/MoneyFlowVisualizer/money.html', '_blank');
+                document.body.classList.remove('debt-focus-mode');
+                clearPopups();
+                
+                const iframe = document.getElementById('money-iframe');
+                // 初回クリック時にのみsrcを設定（無駄な読み込みを防ぐ）
+                if (!iframe.src) {
+                    iframe.src = 'https://kenreconomics-ui.github.io/MoneyFlowVisualizer/money.html';
+                }
+                
+                const isFocused = document.body.classList.toggle('money-iframe-mode');
+                const btn = document.getElementById('btn-money-focus');
+                
+                if (isFocused) {
+                    btn.innerHTML = '✖ 閉じる<span class="btn-tooltip">シミュレーション画面に戻ります</span>';
+                    btn.style.background = '#f43f5e'; // 閉じるボタン風に赤色に変更
+                } else {
+                    btn.innerHTML = '💰 民間貨幣<span class="btn-tooltip">民間の貨幣の正体について<br>解説を表示します</span>';
+                    btn.style.background = '';
+                }
             });
 
             // --- Micro View Functions ---
