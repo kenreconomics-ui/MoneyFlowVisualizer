@@ -483,6 +483,42 @@
             100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
         }
 
+        /* 政策金利ターゲット用ポップアップ */
+        .policy-target-popup {
+            position: absolute;
+            top: 110%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(239, 68, 68, 0.95);
+            color: white;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            white-space: nowrap;
+            text-align: center;
+            line-height: 1.4;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+            opacity: 0;
+            animation: policy-popup-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            pointer-events: none;
+        }
+        .policy-target-popup::after {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: transparent transparent rgba(239, 68, 68, 0.95) transparent;
+        }
+        @keyframes policy-popup-in {
+            0% { opacity: 0; transform: translate(-50%, -10px); }
+            100% { opacity: 1; transform: translate(-50%, 0); }
+        }
+
         .popup-number {
             position: absolute; font-weight: 900; font-size: 1.4rem; pointer-events: none;
             animation: popup-float 1.2s ease-out forwards; z-index: 100;
@@ -638,6 +674,32 @@
             transform-origin: 50px 50px;
         }
 
+        /* 政策金利スライダーのカスタムスタイル */
+        #policy-target-slider {
+            -webkit-appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        #policy-target-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            background: #ef4444;
+            margin-top: -7px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+            border: 2px solid white;
+        }
+        #policy-target-slider::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            background: #fca5a5;
+            border-radius: 2px;
+        }
+        #policy-target-slider:focus {
+            outline: none;
+        }
+
         #micro-view .main-container {
             flex: 1; display: flex; flex-direction: column; justify-content: center; 
             padding: 30px; 
@@ -705,16 +767,16 @@
 
         .action-popup {
             position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 2rem; font-weight: 900; pointer-events: none; z-index: 9999;
-            opacity: 0; animation: action-anim 1.2s ease-out forwards;
-            background: rgba(255,255,255,0.7); padding: 12px 24px; border-radius: 12px;
-            backdrop-filter: blur(2px); border: 2px solid rgba(0,0,0,0.1); white-space: nowrap;
-            text-align: center; line-height: 1.3;
+            font-size: 1.6rem; font-weight: 900; pointer-events: none; z-index: 9999;
+            opacity: 0; animation: action-anim 1.5s ease-out forwards;
+            background: rgba(255,255,255,0.85); padding: 16px 28px; border-radius: 16px;
+            backdrop-filter: blur(4px); border: 2px solid rgba(0,0,0,0.1); white-space: nowrap;
+            text-align: center; line-height: 1.4; box-shadow: 0 10px 25px rgba(0,0,0,0.15);
         }
         @keyframes action-anim {
             0% { opacity: 0; transform: translate(-50%, 0) scale(0.5); }
-            20% { opacity: 1; transform: translate(-50%, -20px) scale(1.1); }
-            80% { opacity: 1; transform: translate(-50%, -20px); }
+            15% { opacity: 1; transform: translate(-50%, -20px) scale(1.1); }
+            85% { opacity: 1; transform: translate(-50%, -20px); }
             100% { opacity: 0; transform: translate(-50%, -50px); }
         }
 
@@ -1070,15 +1132,32 @@
                         <span class="m-stat-lbl" style="margin-top: -5px;">国債金利</span>
                     </div>
 
-                    <div class="m-stat-box" style="align-items: center; min-width: 100px;">
-                        <div class="gauge-container">
-                            <svg viewBox="0 0 100 60" class="gauge-svg">
+                    <div class="m-stat-box" id="policy-rate-box" style="align-items: center; min-width: 160px; position: relative; border: 2px solid #fecaca; background: #fff5f5; box-shadow: 0 4px 6px rgba(239,68,68,0.1);">
+                        <span class="m-stat-lbl" style="margin-top: -5px; color: #b91c1c; font-size: 0.9rem;">政策金利（銀行間）</span>
+                        
+                        <div class="gauge-container" style="width: 130px; height: 75px; overflow: visible; margin-top: 15px; margin-bottom: 5px;">
+                            <svg viewBox="0 -25 100 85" class="gauge-svg" style="overflow: visible;">
                                 <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#e2e8f0" stroke-width="8" stroke-linecap="round"/>
-                                <line id="gauge-needle-policy" class="gauge-needle" x1="50" y1="50" x2="50" y2="15" stroke="#ef4444" stroke-width="4" stroke-linecap="round" />
-                                <circle cx="50" cy="50" r="4" fill="#1e293b"/>
+                                
+                                <!-- 目標値（背景ゾーンとラベル） -->
+                                <g id="target-group" style="transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); transform-origin: 50px 50px;">
+                                    <line x1="50" y1="50" x2="50" y2="10" stroke="#fca5a5" stroke-width="12" stroke-linecap="round" opacity="0.6" />
+                                    <rect x="20" y="-20" width="60" height="20" rx="4" fill="#ef4444" />
+                                    <text x="50" y="-6" font-size="11" fill="white" font-weight="bold" text-anchor="middle">ここが目標</text>
+                                    <polygon points="46,0 54,0 50,5" fill="#ef4444" />
+                                </g>
+
+                                <!-- 実際の金利の針 -->
+                                <line id="gauge-needle-policy" class="gauge-needle" x1="50" y1="50" x2="50" y2="15" stroke="#dc2626" stroke-width="4" stroke-linecap="round" />
+                                <circle cx="50" cy="50" r="5" fill="#dc2626"/>
+                                <circle cx="50" cy="50" r="2" fill="white"/>
                             </svg>
                         </div>
-                        <span class="m-stat-lbl" style="margin-top: -5px;">政策金利</span>
+                        
+                        <div style="width: 100%; margin-top: 8px; display: flex; flex-direction: column; align-items: center; border-top: 1px dashed #fca5a5; padding-top: 8px;">
+                            <span style="font-size: 0.7rem; font-weight: 800; color: #ef4444; margin-bottom: 4px;">🎯 目標設定つまみ</span>
+                            <input type="range" id="policy-target-slider" min="-45" max="45" value="0" style="width: 90%;">
+                        </div>
                     </div>
 
                     <div class="m-stat-box">
@@ -1151,12 +1230,12 @@
         <div class="control-panel">
             <div class="micro-layout-row" style="justify-content: flex-start; overflow: visible;">
                 <div style="display: flex; flex-shrink: 0;">
-                    <button class="op-btn btn-buy-op" id="btn-buy-op"><span>📈 買いオペ (国債買取)</span><span class="btn-tooltip">日銀が民間銀行から国債を買い取り、<br>代金として日銀当座預金を供給します。<br>金利低下の圧力がかかります。</span></button>
-                    <button class="op-btn btn-sell-op" id="btn-sell-op"><span>📉 売りオペ (国債売却)</span><span class="btn-tooltip">日銀が民間銀行へ国債を売却し、<br>代金として日銀当座預金を回収します。<br>金利上昇の圧力がかかります。</span></button>
+                    <button class="op-btn btn-buy-op" id="btn-buy-op"><span>📈 買いオペ (国債買取)</span><span class="btn-tooltip">日銀が民間銀行から国債を買い取り、<br>当座預金を供給して金利を下げます。</span></button>
+                    <button class="op-btn btn-sell-op" id="btn-sell-op"><span>📉 売りオペ (国債売却)</span><span class="btn-tooltip">日銀が民間銀行へ国債を売却し、<br>当座預金を吸収して金利を上げます。</span></button>
                 </div>
                 <div style="margin-left: 16px; font-size: 0.8rem; color: var(--text-sub); flex: 1; line-height: 1.5; white-space: nowrap;">
-                    ※ 買いオペ：銀行から国債を買い取り、代金を日銀当座預金（ベースマネー）で支払います。<br>
-                    ※ 売りオペ：銀行へ国債を売却し、代金を日銀当座預金（ベースマネー）から回収します。
+                    ※ 買いオペ：銀行から国債を買い取り、代金を日銀当座預金で支払います。<br>
+                    ※ 売りオペ：銀行へ国債を売り、代金を日銀当座預金から回収します。
                 </div>
             </div>
         </div>
@@ -1209,6 +1288,7 @@
                 STATE.private = { asset: 1900, liability: 600, bonds: 400 }; 
                 microState = { boj: { jgb: 600, deposit: 600, govtDeposit: 0 }, bank: { jgb: 300, deposit: 600, liabilities: 1500, loans: 600 } };
                 updateInterestRate(-30, true); 
+                updatePolicyTarget(-30);
                 updateUI();
             };
 
@@ -1217,8 +1297,23 @@
                 STATE.private = { asset: 0, liability: 0, bonds: 0 };
                 microState = { boj: { jgb: 0, deposit: 0, govtDeposit: 0 }, bank: { jgb: 0, deposit: 0, liabilities: 0, loans: 0 } };
                 updateInterestRate(0, true);
+                updatePolicyTarget(0);
                 updateUI();
             };
+
+            // 目標スライダーの角度をプログラムから設定する関数
+            const updatePolicyTarget = (value) => {
+                const slider = document.getElementById('policy-target-slider');
+                const targetGroup = document.getElementById('target-group');
+                if(slider) slider.value = value;
+                if(targetGroup) targetGroup.style.transform = `rotate(${value}deg)`;
+            };
+
+            // スライダーを手動で動かした時のイベント
+            document.getElementById('policy-target-slider').addEventListener('input', (e) => {
+                const targetGroup = document.getElementById('target-group');
+                if(targetGroup) targetGroup.style.transform = `rotate(${e.target.value}deg)`;
+            });
 
             // Initialize app with Japan State
             setJapanState();
@@ -1230,6 +1325,27 @@
                 updateMicroUI();
                 viewMacro.classList.add('view-hidden');
                 viewMicro.classList.remove('view-hidden');
+                
+                // 政策金利の誘導目標を示すポップアップを表示
+                const existing = document.querySelector('.policy-target-popup');
+                if (existing) existing.remove();
+
+                setTimeout(() => {
+                    const target = document.getElementById('policy-rate-box');
+                    if (target) {
+                        const el = document.createElement('div');
+                        el.className = 'policy-target-popup';
+                        el.innerHTML = '🎯 金利誘導をやってみよう！<br><small style="font-size:0.8em; font-weight:600;">つまみで目標を決め、国債売買(オペ)で<br>実際の金利の針を目標に誘導してください</small>';
+                        target.appendChild(el);
+                        setTimeout(() => {
+                            if (el && el.parentNode) {
+                                el.style.opacity = '0';
+                                el.style.transition = 'opacity 0.5s';
+                                setTimeout(() => { if (el && el.parentNode) el.remove(); }, 500);
+                            }
+                        }, 6000); // 6秒後にフェードアウト
+                    }
+                }, 600);
             });
 
             document.getElementById('btn-back-macro').addEventListener('click', () => {
@@ -1237,6 +1353,14 @@
                 viewMicro.classList.add('view-hidden');
                 viewMacro.classList.remove('view-hidden');
             });
+
+            // 内部のiframeモードを閉じる関数
+            const closeIframeMode = () => {
+                document.body.classList.remove('money-iframe-mode');
+                const btn = document.getElementById('btn-money-focus');
+                btn.innerHTML = '💰 民間貨幣<span class="btn-tooltip">民間の貨幣の正体について<br>解説を表示します</span>';
+                btn.style.background = '';
+            };
 
             document.getElementById('btn-close-intro').addEventListener('click', () => {
                 document.getElementById('intro-overlay').classList.remove('visible');
@@ -1268,7 +1392,7 @@
                 // 政府預金の同期
                 microState.boj.govtDeposit = STATE.govt.asset;
 
-                // 修正1：日銀当座預金は、日銀の資産(国債)から負債(政府預金)を引いたもの
+                // 日銀当座預金は、日銀の資産(国債)から負債(政府預金)を引いたもの
                 microState.boj.deposit = Math.max(0, microState.boj.jgb - microState.boj.govtDeposit);
                 
                 // 民間銀行の当座預金も同期
@@ -1510,14 +1634,6 @@
             document.getElementById('btn-bond-buy').addEventListener('click', () => actions.bondBuy());
             document.getElementById('btn-bond-sell').addEventListener('click', () => actions.bondSell());
 
-            // 内部のiframeモードを閉じる関数
-            const closeIframeMode = () => {
-                document.body.classList.remove('money-iframe-mode');
-                const btn = document.getElementById('btn-money-focus');
-                btn.innerHTML = '💰 民間貨幣<span class="btn-tooltip">民間の貨幣の正体について<br>解説を表示します</span>';
-                btn.style.background = '';
-            };
-
             document.getElementById('btn-help').addEventListener('click', () => {
                 document.getElementById('intro-overlay').classList.add('visible');
             });
@@ -1688,7 +1804,7 @@
             document.getElementById('btn-buy-op').addEventListener('click', () => {
                 if (microState.bank.jgb < MICRO_CONFIG.step) return; 
                 const amt = MICRO_CONFIG.step;
-                showMicroAction('📈 日銀が国債を買い<br><small>銀行内マネー(当預)を供給</small>', 'var(--money-color)');
+                showMicroAction('📈 国債を買い、当座預金を供給<br><small>当座預金が余り、<b>金利が低下</b>します</small>', 'var(--money-color)');
                 showMicroPopup(miEls.bankJgb, -amt, 'jgb');
                 updateInterestRate(-15, false); // 相対値
                 microState.boj.jgb += amt; microState.boj.deposit += amt;
@@ -1701,14 +1817,14 @@
             document.getElementById('btn-sell-op').addEventListener('click', () => {
                 if (microState.boj.jgb < MICRO_CONFIG.step || microState.bank.deposit < MICRO_CONFIG.step) return;
                 const amt = MICRO_CONFIG.step;
-                showMicroAction('📉 日銀が国債を売り<br><small>銀行内マネー(当預)を回収</small>', 'var(--jgb-color)');
+                showMicroAction('📉 国債を売り、当座預金を回収<br><small>当座預金が不足し、<b>金利が上昇</b>します</small>', 'var(--jgb-color)');
                 showMicroPopup(miEls.bankDep, -amt, 'money');
                 updateInterestRate(15, false); // 相対値
                 microState.boj.jgb -= amt; microState.boj.deposit -= amt;
                 microState.bank.jgb += amt; microState.bank.deposit -= amt;
                 updateMicroUI();
                 flashEl(miEls.bankJgb); showMicroPopup(miEls.bankJgb, amt, 'jgb');
-                // 修正2：日銀側のアニメーション追加
+                // 日銀側のアニメーション追加
                 flashEl(miEls.bojJgb); showMicroPopup(miEls.bojJgb, -amt, 'jgb');
                 flashEl(miEls.bojDep); showMicroPopup(miEls.bojDep, -amt, 'money');
             });
